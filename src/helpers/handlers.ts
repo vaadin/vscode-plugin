@@ -97,7 +97,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
         }
     }
 
-    if (activeDocument !== null) {
+    if (activeDocument) {
         await vscode.window.showTextDocument(activeDocument);
     }
 }
