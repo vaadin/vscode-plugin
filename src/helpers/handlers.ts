@@ -14,23 +14,23 @@ export enum Handlers {
 export type CommandRequest = {
     command: string,
     data: any
-}
+};
 
 type WriteCommandData = {
     file: string,
     undoLabel: string | undefined,
     content: string
-}
+};
 
 type UndoRedoCommandData = {
     files: string[]
-}
+};
 
 type ShowInIdeCommandData = {
     file: string,
     line: number,
     column: number
-}
+};
 
 export async function writeFileHandler(data: WriteCommandData) {
 
@@ -48,7 +48,7 @@ export async function writeFileHandler(data: WriteCommandData) {
         const content = new TextEncoder().encode(data.content);
 
         if (fs.existsSync(data.file)) {
-            vscode.window.visibleTextEditors
+            vscode.window.visibleTextEditors;
             const entireRange = new vscode.Range(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
             workspaceEdit.replace(uri, entireRange, data.content, metadata);
         } else {
@@ -63,7 +63,7 @@ export async function writeFileHandler(data: WriteCommandData) {
         // file should be marked as modified
         if (document.isDirty) {
             // editor is required to perform save
-            const wasEditorVisible = visibleEditors.find(e => e.document == document) !== undefined;
+            const wasEditorVisible = visibleEditors.find(e => e.document === document) !== undefined;
             if (!wasEditorVisible) {
                 await vscode.window.showTextDocument(uri);
             }
@@ -97,7 +97,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
         }
     }
 
-    if (activeDocument != null) {
+    if (activeDocument !== null) {
         await vscode.window.showTextDocument(activeDocument);
     }
 }
@@ -109,7 +109,7 @@ export async function showInIdeHandler(data: ShowInIdeCommandData) {
         const position = new vscode.Position(data.line, data.column);
         editor.selection = new vscode.Selection(position, position);
         const range = new vscode.Range(data.line, data.column, data.line, data.column);
-        editor.revealRange(range, vscode.TextEditorRevealType.InCenter)
+        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }

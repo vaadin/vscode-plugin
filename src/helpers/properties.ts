@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { PropertiesEditor } from 'properties-file/editor'
+import { PropertiesEditor } from 'properties-file/editor';
 import { getProjectFilePath, projectPathExists } from './projectFilesHelpers';
 import { Handlers } from './handlers';
 
