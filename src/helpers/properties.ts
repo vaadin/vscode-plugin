@@ -30,9 +30,9 @@ function createProperties(port: Number): PropertiesEditor {
 	editor.insert('port', port.toString());
 	editor.insert('version', getPluginVersion());
 	editor.insert('supportedActions', Object.values(Handlers).join(','));
-	return editor
+	return editor;
 }
 
 function getPluginVersion(): string {
-	return vscode.extensions.getExtension('vaadin.vaadin')!.packageJSON.version
+	return vscode.extensions.getExtension('vaadin.vaadin')!.packageJSON.version;
 }

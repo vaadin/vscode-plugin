@@ -29,24 +29,24 @@ export function deactivate() {
 }
 
 function isVaadinProject(): boolean {
-	const vaadinRegex = /com.vaadin/
+	const vaadinRegex = /com.vaadin/;
 
 	// Maven projects
 	if (projectPathExists('pom.xml')) {
-		const contents = readProjectFile('pom.xml')
-		return contents?.match(vaadinRegex) != null
+		const contents = readProjectFile('pom.xml');
+		return contents?.match(vaadinRegex) !== null;
 	}
 
 	// Gradle projects
 	if (projectPathExists('build.gradle')) {
-		const contents = readProjectFile('build.gradle')
-		return contents?.match(vaadinRegex) != null
+		const contents = readProjectFile('build.gradle');
+		return contents?.match(vaadinRegex) !== null;
 	}
 
 	// Gradle Kotlin projects
 	if (projectPathExists('build.gradle.kts')) {
-		const contents = readProjectFile('build.gradle.kts')
-		return contents?.match(vaadinRegex) != null
+		const contents = readProjectFile('build.gradle.kts');
+		return contents?.match(vaadinRegex) !== null;
 	}
 
 	return false;

@@ -28,7 +28,7 @@ export function stopServer() {
 }
 
 function handleClientData(data: any) {
-    const request = JSON.parse(data.toString()) as CommandRequest
+    const request = JSON.parse(data.toString()) as CommandRequest;
     switch(request.command) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
