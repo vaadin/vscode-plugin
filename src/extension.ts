@@ -1,26 +1,54 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { projectPathExists, readProjectFile } from './helpers/projectFilesHelpers';
+import { startServer, stopServer } from './helpers/server';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vaadin" is now active!');
+	// // The command has been defined in the package.json file
+	// // Now provide the implementation of the command with registerCommand
+	// // The commandId parameter must match the command field in package.json
+	// let disposable = vscode.commands.registerCommand('vaadin.helloWorld', () => {
+	// 	// The code you place here will be executed every time your command is executed
+	// 	// Display a message box to the user
+	// 	vscode.window.showInformationMessage('Hello World from vaadin!');
+	// });
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('vaadin.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vaadin!');
-	});
+	if (!isVaadinProject()) {
+		return;
+	}
 
-	context.subscriptions.push(disposable);
+	startServer();
+
+	vscode.window.showInformationMessage('Vaadin Copilot integration started');
+	// context.subscriptions.push(disposable);
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+	stopServer();
+}
+
+function isVaadinProject(): boolean {
+	const vaadinRegex = /com.vaadin/
+
+	// Maven projects
+	if (projectPathExists('pom.xml')) {
+		const contents = readProjectFile('pom.xml')
+		return contents?.match(vaadinRegex) != null
+	}
+
+	// Gradle projects
+	if (projectPathExists('build.gradle')) {
+		const contents = readProjectFile('build.gradle')
+		return contents?.match(vaadinRegex) != null
+	}
+
+	// Gradle Kotlin projects
+	if (projectPathExists('build.gradle.kts')) {
+		const contents = readProjectFile('build.gradle.kts')
+		return contents?.match(vaadinRegex) != null
+	}
+
+	return false;
+
+}

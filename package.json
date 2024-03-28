@@ -1,24 +1,20 @@
 {
   "name": "vaadin",
   "displayName": "vaadin",
-  "description": "",
+  "description": "Official Vaadin plugin for VSCode, currently featuring undo support for Vaadin Copilot modifications.",
   "version": "0.0.1",
+  "publisher": "vaadin",
+  "repository": "https://github.com/vaadin/vscode-plugin",
   "engines": {
     "vscode": "^1.87.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:*"
+  ],
   "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "vaadin.helloWorld",
-        "title": "Hello World"
-      }
-    ]
-  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -27,15 +23,25 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
   "devDependencies": {
-    "@types/vscode": "^1.87.0",
+    "@types/express": "4.17.21",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
+    "@types/vscode": "^1.87.0",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.3",
     "@vscode/test-cli": "^0.0.6",
-    "@vscode/test-electron": "^2.3.9"
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.56.0",
+    "express": "4.19.1",
+    "properties-file": "^3.5.3",
+    "socket.io": "4.7.5",
+    "typescript": "^5.3.3"
   }
 }
