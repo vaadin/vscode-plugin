@@ -29,6 +29,34 @@
       "supported": false
     }
   },
+  "contributes": {
+    "commands": [
+      {
+        "when": "!vaadin.isRunning",
+        "command": "vaadin.start",
+        "title": "Start Vaadin Copilot integration"
+      },
+      {
+        "when": "vaadin.isRunning",
+        "command": "vaadin.stop",
+        "title": "Stop Vaadin Copilot integration"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "!vaadin.isRunning",
+          "command": "vaadin.start",
+          "group": "2_workspace"
+        },
+        {
+          "when": "vaadin.isRunning",
+          "command": "vaadin.stop",
+          "group": "2_workspace"
+        }
+      ]
+    }
+  },
   "dependencies": {
     "@types/express": "4.17.21",
     "express": "4.19.1",

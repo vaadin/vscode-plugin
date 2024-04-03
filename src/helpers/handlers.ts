@@ -6,6 +6,8 @@ import { isFileInsideProject } from './projectFilesHelpers';
 
 export enum Handlers {
     WRITE = "write",
+    // not supported currently due to VSCode
+    // undo stack management
     // UNDO = "undo",
     // REDO = "redo",
     SHOW_IN_IDE = "showInIde"

@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import express, { Express } from 'express';
 import { Server, createServer } from "http";
 import { deleteProperties, saveProperties } from './properties';
@@ -6,15 +8,17 @@ import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers } from './
 
 var httpServer: Server;
 
+export let statusBarItem: vscode.StatusBarItem;
+statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
+statusBarItem.text = `$(copilot)`
+statusBarItem.tooltip = 'Vaadin Copilot integration is running'
+
 export async function startServer() {
 
 	const app: Express = express();
 	httpServer = createServer(app);
 
-	httpServer.listen(0, 'localhost', () => {
-        const port = (httpServer.address() as AddressInfo).port;
-        saveProperties(port);
-    });
+	httpServer.listen(0, 'localhost', postStartup);
 
     httpServer.on('connection', socket => {
         socket.on('data', handleClientData);
@@ -23,8 +27,7 @@ export async function startServer() {
 }
 
 export function stopServer() {
-    httpServer.close();
-    deleteProperties();
+    httpServer.close(postShutdown);
 }
 
 function handleClientData(data: any) {
@@ -43,4 +46,19 @@ function handleClientData(data: any) {
             showInIdeHandler(request.data);
             break;
     }
+}
+
+function postStartup() {
+    const port = (httpServer.address() as AddressInfo).port;
+    saveProperties(port);
+    vscode.commands.executeCommand('setContext', 'vaadin.isRunning', true);
+    vscode.window.showInformationMessage('Vaadin Copilot integration started');
+    statusBarItem.show();
+}
+
+function postShutdown() {
+    deleteProperties();
+    vscode.commands.executeCommand('setContext', 'vaadin.isRunning', false);
+    vscode.window.showInformationMessage('Vaadin Copilot integration stopped');
+    statusBarItem.hide();
 }
