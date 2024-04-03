@@ -34,5 +34,5 @@ function createProperties(port: Number): PropertiesEditor {
 }
 
 function getPluginVersion(): string {
-	return vscode.extensions.getExtension('vaadin.vaadin-ext')!.packageJSON.version;
+	return vscode.extensions.getExtension('vaadin.vaadin-vscode')!.packageJSON.version;
 }

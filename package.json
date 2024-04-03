@@ -1,5 +1,5 @@
 {
-  "name": "vaadin-ext",
+  "name": "vaadin-vscode",
   "displayName": "Vaadin",
   "description": "Vaadin extension for VSCode - improves user experience while developing Vaadin projects. Currently supports part of Vaadin Copilot features.",
   "version": "1.0.0",
