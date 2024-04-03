@@ -10,10 +10,8 @@ var httpServer: Server;
 
 export let statusBarItem: vscode.StatusBarItem;
 statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
-statusBarItem.text = `$(beaker-stop)`
-statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start'
+updateStatusBarItem(false);
 statusBarItem.show();
-statusBarItem.command = 'vaadin.start';
 
 export async function startServer() {
 
@@ -55,16 +53,24 @@ function postStartup() {
     saveProperties(port);
     vscode.commands.executeCommand('setContext', 'vaadin.isRunning', true);
     vscode.window.showInformationMessage('Vaadin Copilot integration started');
-    statusBarItem.text = `$(beaker)`
-    statusBarItem.tooltip = 'Vaadin Copilot integration is running, click to stop'
-    statusBarItem.command = 'vaadin.stop';
+    updateStatusBarItem(true);
 }
 
 function postShutdown() {
     deleteProperties();
     vscode.commands.executeCommand('setContext', 'vaadin.isRunning', false);
     vscode.window.showInformationMessage('Vaadin Copilot integration stopped');
-    statusBarItem.text = `$(beaker-stop)`
-    statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start'
-    statusBarItem.command = 'vaadin.start';
+    updateStatusBarItem(false);
+}
+
+function updateStatusBarItem(running: boolean) {
+    if (running) {
+        statusBarItem.text = `$(server-running)`
+        statusBarItem.tooltip = 'Vaadin Copilot integration is running, click to stop'
+        statusBarItem.command = 'vaadin.stop';
+    } else {
+        statusBarItem.text = `$(server-stopped)`
+        statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start'
+        statusBarItem.command = 'vaadin.start';
+    }
 }

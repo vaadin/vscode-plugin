@@ -21,7 +21,7 @@
     "workspaceContains:*"
   ],
   "main": "./out/extension.js",
-  "icon": "./theme/icon256.png",
+  "icon": "./resources/icon256.png",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -49,13 +49,22 @@
         "title": "Stop Vaadin Copilot integration"
       }
     ],
-    "productIconThemes": [
-      {
-        "id": "vaadin-vscode",
-        "label": "Vaadin VSCode Icons",
-        "path": "./theme/vaadin-product-icon-theme.json"
+    "icons": {
+      "server-running": {
+        "description": "Vaadin icon for running server",
+        "default": {
+          "fontPath": "./resources/vaadin-vscode.woff",
+          "fontCharacter": "\\e800"
+        }
+      },
+      "server-stopped": {
+        "description": "Vaadin icon for stopped server",
+        "default": {
+          "fontPath": "./resources/vaadin-vscode.woff",
+          "fontCharacter": "\\e802"
+        }
       }
-    ]
+    }
   },
   "dependencies": {
     "@types/express": "4.17.21",
