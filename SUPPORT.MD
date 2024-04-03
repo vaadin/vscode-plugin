@@ -2,7 +2,7 @@
 
 ## Issue tracking
 
-Please use [Vaadin Copilot VSCode Extension issue tracker on GitHub](https://github.com/vaadin/vscode-plugin/issues).
+Please use [Vaadin Copilot VS Code Extension issue tracker on GitHub](https://github.com/vaadin/vscode-plugin/issues).
 
 ## Feedback
 
