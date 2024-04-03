@@ -21,7 +21,7 @@
     "workspaceContains:*"
   ],
   "main": "./out/extension.js",
-  "icon": "resources/icon256.png",
+  "icon": "./theme/icon256.png",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
