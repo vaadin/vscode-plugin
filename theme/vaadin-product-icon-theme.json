@@ -1,0 +1,23 @@
+{
+  "fonts": [
+    {
+      "id": "vaadin-vscode",
+      "src": [
+        {
+          "path": "./vaadin-vscode.woff",
+          "format": "woff"
+        }
+      ],
+      "weight": "normal",
+      "style": "normal"
+    }
+  ],
+  "iconDefinitions": {
+    "beaker": {
+      "fontCharacter": "\\00E800",
+    },
+    "beaker-stop": {
+      "fontCharacter": "\\00E802",
+    }
+  }
+}
