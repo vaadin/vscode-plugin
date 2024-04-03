@@ -1,4 +1,4 @@
-name: Vaadin VSCode Extension Validation
+name: Validate
 
 on:
   push:
