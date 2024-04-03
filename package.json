@@ -1,13 +1,16 @@
 {
-  "name": "vaadin",
-  "displayName": "vaadin",
-  "description": "Official Vaadin plugin for VSCode, currently featuring undo support for Vaadin Copilot modifications.",
-  "version": "0.0.1",
+  "name": "vaadin-ext",
+  "displayName": "Vaadin",
+  "description": "Vaadin extension for VSCode - improves user experience while developing Vaadin projects. Currently supports part of Vaadin Copilot features.",
+  "version": "1.0.0",
   "publisher": "vaadin",
+  "license": "Apache-2.0",
   "repository": "https://github.com/vaadin/vscode-plugin",
+  "pricing": "Free",
   "engines": {
     "vscode": "^1.87.0"
   },
+  "keywords": ["vaadin", "copilot"],
   "categories": [
     "Other"
   ],
@@ -15,6 +18,7 @@
     "workspaceContains:*"
   ],
   "main": "./out/extension.js",
+  "icon": "images/icon256.png",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
