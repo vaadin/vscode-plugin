@@ -19,7 +19,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// disposables
 	context.subscriptions.push(statusBarItem);
-	context.subscriptions.push(startServerCommand)
+	context.subscriptions.push(startServerCommand);
     context.subscriptions.push(stopServerCommand);
 
 	startServer();

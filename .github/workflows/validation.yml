@@ -1,8 +1,8 @@
-name: Vaadin VSCode Plugin Validation
+name: Validate
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
 
 concurrency:

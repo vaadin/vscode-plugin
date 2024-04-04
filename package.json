@@ -1,13 +1,19 @@
 {
-  "name": "vaadin",
-  "displayName": "vaadin",
-  "description": "Official Vaadin plugin for VSCode, currently featuring undo support for Vaadin Copilot modifications.",
-  "version": "0.0.1",
+  "name": "vaadin-vscode",
+  "displayName": "Vaadin",
+  "description": "Vaadin extension for VS Code - improves user experience while developing Vaadin projects. Currently supports part of Vaadin Copilot features.",
+  "version": "1.0.0",
   "publisher": "vaadin",
+  "license": "Apache-2.0",
   "repository": "https://github.com/vaadin/vscode-plugin",
+  "pricing": "Free",
   "engines": {
     "vscode": "^1.87.0"
   },
+  "keywords": [
+    "vaadin",
+    "copilot"
+  ],
   "categories": [
     "Other"
   ],
@@ -15,6 +21,7 @@
     "workspaceContains:*"
   ],
   "main": "./out/extension.js",
+  "icon": "./resources/icon256.png",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -42,19 +49,21 @@
         "title": "Stop Vaadin Copilot integration"
       }
     ],
-    "menus": {
-      "explorer/context": [
-        {
-          "when": "!vaadin.isRunning",
-          "command": "vaadin.start",
-          "group": "2_workspace"
-        },
-        {
-          "when": "vaadin.isRunning",
-          "command": "vaadin.stop",
-          "group": "2_workspace"
+    "icons": {
+      "server-running": {
+        "description": "Vaadin icon for running server",
+        "default": {
+          "fontPath": "./resources/vaadin-vscode.woff",
+          "fontCharacter": "\\e800"
         }
-      ]
+      },
+      "server-stopped": {
+        "description": "Vaadin icon for stopped server",
+        "default": {
+          "fontPath": "./resources/vaadin-vscode.woff",
+          "fontCharacter": "\\e802"
+        }
+      }
     }
   },
   "dependencies": {
