@@ -37,8 +37,6 @@ type ShowInIdeCommandData = {
 export async function writeFileHandler(data: WriteCommandData) {
 
     if (isFileInsideProject(data.file)) {
-        const visibleEditors = vscode.window.visibleTextEditors;
-        
         const workspaceEdit = new vscode.WorkspaceEdit();
 
         const metadata = {
@@ -53,28 +51,18 @@ export async function writeFileHandler(data: WriteCommandData) {
             vscode.window.visibleTextEditors;
             const entireRange = new vscode.Range(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
             workspaceEdit.replace(uri, entireRange, data.content, metadata);
+            console.log('Replacing content of ' + uri);
         } else {
             // cannot use createFile all the time as it creates "remove file" undo operation
             workspaceEdit.createFile(uri, { contents: content }, metadata);
+            console.log('Saving content in ' + uri);
         }
 
         // perform operation
         await vscode.workspace.applyEdit(workspaceEdit);
-        
-        const document = await vscode.workspace.openTextDocument(uri);
-        // file should be marked as modified
-        if (document.isDirty) {
-            // editor is required to perform save
-            const wasEditorVisible = visibleEditors.find(e => e.document === document) !== undefined;
-            if (!wasEditorVisible) {
-                await vscode.window.showTextDocument(uri);
-            }
-            await vscode.workspace.save(uri);
-            if (!wasEditorVisible) {
-                await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-            }
-        }
 
+        // save changes
+        vscode.workspace.openTextDocument(uri).then(doc => doc.save());
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }
@@ -112,6 +100,7 @@ export async function showInIdeHandler(data: ShowInIdeCommandData) {
         editor.selection = new vscode.Selection(position, position);
         const range = new vscode.Range(data.line, data.column, data.line, data.column);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        console.log('Opening document ' + data.file + ' at ' + data.line + ':' + data.column);
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }
