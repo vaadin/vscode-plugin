@@ -65,12 +65,12 @@ function postShutdown() {
 
 function updateStatusBarItem(running: boolean) {
     if (running) {
-        statusBarItem.text = `$(server-running)`
-        statusBarItem.tooltip = 'Vaadin Copilot integration is running, click to stop'
+        statusBarItem.text = `$(server-running)`;
+        statusBarItem.tooltip = 'Vaadin Copilot integration is running, click to stop';
         statusBarItem.command = 'vaadin.stop';
     } else {
-        statusBarItem.text = `$(server-stopped)`
-        statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start'
+        statusBarItem.text = `$(server-stopped)`;
+        statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start';
         statusBarItem.command = 'vaadin.start';
     }
 }
