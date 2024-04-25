@@ -5,12 +5,6 @@ import { newProjectUserInput } from './helpers/userInput';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	if (!isVaadinProject()) {
-		return;
-	}
-
-	vscode.commands.executeCommand('setContext', 'vaadin.isRunning', false);
-
 	let startServerCommand = vscode.commands.registerCommand('vaadin.start', function () {
 		startServer();
 	});
@@ -27,7 +21,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(stopServerCommand);
 	context.subscriptions.push(newProjectCommand);
 
-	startServer();
+	if (isVaadinProject()) {
+		startServer();
+	}
+
 }
 
 export function deactivate() {
@@ -38,7 +35,7 @@ async function createNewProject() {
 	newProjectUserInput().then(model => {
 		if (!model) {
 			vscode.window.showWarningMessage(
-				"Vaadin Project creation cancelled"
+				"Vaadin project generation cancelled"
 			);
 			return;
 		}

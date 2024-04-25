@@ -12,13 +12,16 @@
   },
   "keywords": [
     "vaadin",
-    "copilot"
+    "copilot",
+    "hilla",
+    "flow"
   ],
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:*"
+    "workspaceContains:*",
+    "onCommand:vaadin.*"
   ],
   "main": "./out/extension.js",
   "icon": "./resources/icon256.png",
@@ -36,21 +39,22 @@
       "supported": false
     }
   },
-  "contributes": {
+"contributes": {
     "commands": [
       {
-        "when": "!vaadin.isRunning",
         "command": "vaadin.start",
-        "title": "Vaadin: Start Vaadin Copilot integration"
+        "title": "Vaadin: Start Vaadin Copilot integration",
+        "category": "Vaadin"
       },
       {
-        "when": "vaadin.isRunning",
         "command": "vaadin.stop",
-        "title": "Vaadin: Stop Vaadin Copilot integration"
+        "title": "Vaadin: Stop Vaadin Copilot integration",
+        "category": "Vaadin"
       },
       {
         "command": "vaadin.newProject",
-        "title": "Vaadin: Generate new Vaadin project"
+        "title": "Vaadin: Generate new Vaadin project",
+        "category": "Vaadin"
       }
     ],
     "icons": {
