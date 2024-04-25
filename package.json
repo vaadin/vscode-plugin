@@ -41,12 +41,16 @@
       {
         "when": "!vaadin.isRunning",
         "command": "vaadin.start",
-        "title": "Start Vaadin Copilot integration"
+        "title": "Vaadin: Start Vaadin Copilot integration"
       },
       {
         "when": "vaadin.isRunning",
         "command": "vaadin.stop",
-        "title": "Stop Vaadin Copilot integration"
+        "title": "Vaadin: Stop Vaadin Copilot integration"
+      },
+      {
+        "command": "vaadin.newProject",
+        "title": "Vaadin: Generate new Vaadin project"
       }
     ],
     "icons": {
@@ -70,9 +74,12 @@
     "@types/express": "4.17.21",
     "express": "4.19.1",
     "properties-file": "^3.5.3",
-    "socket.io": "4.7.5"
+    "socket.io": "4.7.5",
+    "adm-zip": "^0.5.12",
+    "axios": "^1.6.8"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@types/vscode": "^1.87.0",
