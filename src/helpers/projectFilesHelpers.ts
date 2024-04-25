@@ -54,7 +54,7 @@ export async function downloadAndExtract(model: ProjectModel) {
     model.name.replace(/\s/g, "-").toLowerCase()
   );
 
-  console.log("Vaadin extracted to " + projectPath);
+  console.log("Vaadin project created at " + projectPath);
 
   const uri = vscode.Uri.file(projectPath);
   vscode.commands.executeCommand("vscode.openFolder", uri, true);
