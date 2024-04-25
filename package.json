@@ -43,17 +43,17 @@
     "commands": [
       {
         "command": "vaadin.start",
-        "title": "Vaadin: Start Vaadin Copilot integration",
+        "title": "Start Vaadin Copilot integration",
         "category": "Vaadin"
       },
       {
         "command": "vaadin.stop",
-        "title": "Vaadin: Stop Vaadin Copilot integration",
+        "title": "Stop Vaadin Copilot integration",
         "category": "Vaadin"
       },
       {
         "command": "vaadin.newProject",
-        "title": "Vaadin: Generate new Vaadin project",
+        "title": "Generate new Vaadin project",
         "category": "Vaadin"
       }
     ],
