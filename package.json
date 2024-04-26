@@ -1,8 +1,8 @@
 {
   "name": "vaadin",
   "displayName": "vaadin",
-  "description": "Official Vaadin plugin for VSCode, currently featuring undo support for Vaadin Copilot modifications.",
-  "version": "0.0.1",
+  "description": "Official Vaadin plugin for VS Code, allows creating Vaadin projects and improves Vaadin Copilot experience.",
+  "version": "1.0.0",
   "publisher": "vaadin",
   "repository": "https://github.com/vaadin/vscode-plugin",
   "engines": {
