@@ -4,7 +4,7 @@ import express from 'express';
 import { Server, createServer } from "http";
 import { deleteProperties, saveProperties } from './properties';
 import { AddressInfo } from 'net';
-import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers } from './handlers';
+import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers, refresh } from './handlers';
 
 const httpServer: Server = createServer(express());
 
@@ -52,6 +52,9 @@ function handleClientData(data: any) {
         //     break;
         case Handlers.SHOW_IN_IDE:
             showInIdeHandler(request.data);
+            break;
+        case Handlers.REFRESH:
+            refresh();
             break;
     }
 }
