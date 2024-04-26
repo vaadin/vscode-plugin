@@ -4,7 +4,7 @@ import express, { Express } from 'express';
 import { Server, createServer } from "http";
 import { deleteProperties, saveProperties } from './properties';
 import { AddressInfo } from 'net';
-import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers } from './handlers';
+import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers, refresh } from './handlers';
 
 var httpServer: Server;
 
@@ -15,10 +15,10 @@ statusBarItem.tooltip = 'Vaadin Copilot integration is running'
 
 export async function startServer() {
 
-	const app: Express = express();
-	httpServer = createServer(app);
+    const app: Express = express();
+    httpServer = createServer(app);
 
-	httpServer.listen(0, 'localhost', postStartup);
+    httpServer.listen(0, 'localhost', postStartup);
 
     httpServer.on('connection', socket => {
         socket.on('data', handleClientData);
@@ -32,7 +32,7 @@ export function stopServer() {
 
 function handleClientData(data: any) {
     const request = JSON.parse(data.toString()) as CommandRequest;
-    switch(request.command) {
+    switch (request.command) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
             break;
@@ -44,6 +44,9 @@ function handleClientData(data: any) {
         //     break;
         case Handlers.SHOW_IN_IDE:
             showInIdeHandler(request.data);
+            break;
+        case Handlers.REFRESH:
+            refresh();
             break;
     }
 }
