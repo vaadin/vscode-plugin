@@ -1,7 +1,9 @@
+import { toKebabCase } from "js-convert-case";
 import * as vscode from "vscode";
 
 export type ProjectModel = {
     name: string;
+    artifactId: string;
     location: string;
     exampleViews: string;
     authentication: boolean;
@@ -14,18 +16,21 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     // Project name
     const name = await vscode.window.showInputBox({
         prompt: "Project Name",
-    }) || "untitled";
-
-    // Project location
-    const locationUri = await vscode.window.showOpenDialog({
-        canSelectFiles: false,
-        canSelectFolders: true,
-        canSelectMany: false,
-        title: "Project location",
-        openLabel: "Create here",
+        value: "New Project"
     });
-    const location = locationUri ? locationUri[0].fsPath : undefined;
-    if (!location) return;
+    if (!name) return;
+
+    // Artifact Id
+    const artifactId = await vscode.window.showInputBox({
+        prompt: "Artifact Id, should be valid Java artifact identifier",
+        value: toKebabCase(name),
+        validateInput: v => {
+            if (!v.match(/^[0-9a-z\-\_]+$/)) {
+                return "Artifact Id should contain a-z, 0-9, -, _ characters only."
+            }
+        }
+    });
+    if (!artifactId) return;
 
     // Example views
     const exampleViews = await vscode.window.showQuickPick(["Flow (Java)", "Hilla (React)", "None"], {
@@ -46,8 +51,20 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     });
     if (!version) return;
 
+    // Project location
+    const locationUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        title: "Project location",
+        openLabel: "Create here"
+    });
+    const location = locationUri ? locationUri[0].fsPath : undefined;
+    if (!location) return;
+
     return {
-        name,
+        name: name.trim(),
+        artifactId,
         location,
         exampleViews,
         authentication,

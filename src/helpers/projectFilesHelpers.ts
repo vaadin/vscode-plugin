@@ -45,17 +45,18 @@ export async function downloadAndExtract(model: ProjectModel) {
   const response = await axios.get(url, { responseType: "arraybuffer" });
   const zipBuffer = Buffer.from(response.data, "binary");
 
-  const zip = new AdmZip(zipBuffer);
-  zip.extractAllTo(model.location, /*overwrite*/ true);
+  const generatedProjectPath = path.join(model.location, model.artifactId);
+  const projectPath = path.join(model.location, model.name);
 
-  // Open the newly created project folder in a new VS Code wi ndow
-  const projectPath = path.join(
-    model.location,
-    model.name.replace(/\s/g, "-").toLowerCase()
-  );
+  const zip = new AdmZip(zipBuffer);
+  zip.extractAllTo(model.location, true, true);
+
+  // use project name from user input for project location
+  fs.renameSync(generatedProjectPath, projectPath);
 
   console.log("Vaadin project created at " + projectPath);
 
+  // Open the newly created project folder in a new VS Code window
   const uri = vscode.Uri.file(projectPath);
   vscode.commands.executeCommand("vscode.openFolder", uri, true);
 
@@ -78,6 +79,6 @@ function getDownloadUrl(model: ProjectModel) {
     preset += '&preset=partial-prerelease'
   }
 
-  return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.name}`
+  return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`
 
 }
