@@ -10,7 +10,8 @@ export enum Handlers {
     // undo stack management
     // UNDO = "undo",
     // REDO = "redo",
-    SHOW_IN_IDE = "showInIde"
+    SHOW_IN_IDE = "showInIde",
+    REFRESH = "refresh"
 }
 
 export type CommandRequest = {
@@ -104,4 +105,8 @@ export async function showInIdeHandler(data: ShowInIdeCommandData) {
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }
+}
+
+export async function refresh() {
+    vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 }
