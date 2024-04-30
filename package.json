@@ -1,7 +1,7 @@
 {
   "name": "vaadin-vscode",
   "displayName": "Vaadin",
-  "description": "Official Vaadin plugin for VS Code. Create Vaadin projects and improve Vaadin Copilot experience!",
+  "description": "Official Vaadin extension for Visual Studio Code. Create Vaadin projects and improve Vaadin Copilot experience!",
   "version": "1.0.0",
   "publisher": "vaadin",
   "license": "Apache-2.0",
