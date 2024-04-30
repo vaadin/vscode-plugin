@@ -1,5 +1,6 @@
 import { toKebabCase } from "js-convert-case";
 import * as vscode from "vscode";
+import * as path from 'path';
 
 export type ProjectModel = {
     name: string;
@@ -16,7 +17,12 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     // Project name
     const name = await vscode.window.showInputBox({
         prompt: "Project Name",
-        value: "New Project"
+        value: "New Project",
+        validateInput: v => {
+            if (!v.match(/^[^\.].*[^\.]$/)) {
+                return "Project name must be valid directory name."
+            }
+        }
     });
     if (!name) return;
 
