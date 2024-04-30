@@ -1,15 +1,3 @@
 # Change Log
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.0.0] - 2024-04
-
-### Added
-
-- Support for Show in IDE
-- Support for file write
-- Start/Stop Vaadin Copilot integration on command and explorer context menu
-- Status bar item showing status of Vaadin Copilot integration
+Check [Release notes on GitHub](https://github.com/vaadin/vscode-plugin/releases) for detailed information.
