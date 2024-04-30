@@ -12,13 +12,16 @@
   },
   "keywords": [
     "vaadin",
-    "copilot"
+    "copilot",
+    "hilla",
+    "flow"
   ],
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:*"
+    "workspaceContains:*",
+    "onCommand:vaadin.*"
   ],
   "main": "./out/extension.js",
   "icon": "./resources/icon256.png",
@@ -39,14 +42,19 @@
   "contributes": {
     "commands": [
       {
-        "when": "!vaadin.isRunning",
         "command": "vaadin.start",
-        "title": "Start Vaadin Copilot integration"
+        "title": "Start Vaadin Copilot integration",
+        "category": "Vaadin"
       },
       {
-        "when": "vaadin.isRunning",
         "command": "vaadin.stop",
-        "title": "Stop Vaadin Copilot integration"
+        "title": "Stop Vaadin Copilot integration",
+        "category": "Vaadin"
+      },
+      {
+        "command": "vaadin.newProject",
+        "title": "Generate new Vaadin project",
+        "category": "Vaadin"
       }
     ],
     "icons": {
@@ -68,11 +76,15 @@
   },
   "dependencies": {
     "@types/express": "4.17.21",
+    "adm-zip": "^0.5.12",
+    "axios": "^1.6.8",
     "express": "4.19.1",
+    "js-convert-case": "^4.2.0",
     "properties-file": "^3.5.3",
     "socket.io": "4.7.5"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@types/vscode": "^1.87.0",

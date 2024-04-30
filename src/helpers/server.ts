@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-import express, { Express } from 'express';
+import express from 'express';
 import { Server, createServer } from "http";
 import { deleteProperties, saveProperties } from './properties';
 import { AddressInfo } from 'net';
 import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers } from './handlers';
 
-var httpServer: Server;
+const httpServer: Server = createServer(express());
 
 export let statusBarItem: vscode.StatusBarItem;
 statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
@@ -15,10 +15,12 @@ statusBarItem.show();
 
 export async function startServer() {
 
-	const app: Express = express();
-	httpServer = createServer(app);
+    if (httpServer.listening) {
+        vscode.window.showInformationMessage('Vaadin Copilot integration is already running');
+        return;
+    }
 
-	httpServer.listen(0, 'localhost', postStartup);
+    httpServer.listen(0, 'localhost', postStartup);
 
     httpServer.on('connection', socket => {
         socket.on('data', handleClientData);
@@ -27,12 +29,18 @@ export async function startServer() {
 }
 
 export function stopServer() {
+
+    if (!httpServer.listening) {
+        vscode.window.showInformationMessage('Vaadin Copilot integration is not running');
+        return;
+    }
+
     httpServer.close(postShutdown);
 }
 
 function handleClientData(data: any) {
     const request = JSON.parse(data.toString()) as CommandRequest;
-    switch(request.command) {
+    switch (request.command) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
             break;
@@ -51,14 +59,12 @@ function handleClientData(data: any) {
 function postStartup() {
     const port = (httpServer.address() as AddressInfo).port;
     saveProperties(port);
-    vscode.commands.executeCommand('setContext', 'vaadin.isRunning', true);
     vscode.window.showInformationMessage('Vaadin Copilot integration started');
     updateStatusBarItem(true);
 }
 
 function postShutdown() {
     deleteProperties();
-    vscode.commands.executeCommand('setContext', 'vaadin.isRunning', false);
     vscode.window.showInformationMessage('Vaadin Copilot integration stopped');
     updateStatusBarItem(false);
 }

@@ -1,32 +1,46 @@
 import * as vscode from 'vscode';
-import { projectPathExists, readProjectFile } from './helpers/projectFilesHelpers';
+import { downloadAndExtract, projectPathExists, readProjectFile } from './helpers/projectFilesHelpers';
 import { statusBarItem, startServer, stopServer } from './helpers/server';
+import { newProjectUserInput } from './helpers/userInput';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	if (!isVaadinProject()) {
-		return;
-	}
-
-	vscode.commands.executeCommand('setContext', 'vaadin.isRunning', false);
-
-	let startServerCommand = vscode.commands.registerCommand('vaadin.start', function (uri) {
-        startServer();
-    });
-	let stopServerCommand = vscode.commands.registerCommand('vaadin.stop', function (uri) {
-        stopServer();
-    });
+	let startServerCommand = vscode.commands.registerCommand('vaadin.start', function () {
+		startServer();
+	});
+	let stopServerCommand = vscode.commands.registerCommand('vaadin.stop', function () {
+		stopServer();
+	});
+	let newProjectCommand = vscode.commands.registerCommand('vaadin.newProject', function () {
+		createNewProject();
+	});
 
 	// disposables
 	context.subscriptions.push(statusBarItem);
 	context.subscriptions.push(startServerCommand);
-    context.subscriptions.push(stopServerCommand);
+	context.subscriptions.push(stopServerCommand);
+	context.subscriptions.push(newProjectCommand);
 
-	startServer();
+	if (isVaadinProject()) {
+		startServer();
+	}
+
 }
 
 export function deactivate() {
 	stopServer();
+}
+
+async function createNewProject() {
+	newProjectUserInput().then(model => {
+		if (!model) {
+			vscode.window.showWarningMessage(
+				"Vaadin project generation cancelled"
+			);
+			return;
+		}
+		downloadAndExtract(model);
+	})
 }
 
 function isVaadinProject(): boolean {
@@ -51,5 +65,4 @@ function isVaadinProject(): boolean {
 	}
 
 	return false;
-
 }
