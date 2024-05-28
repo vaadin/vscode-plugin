@@ -6,7 +6,7 @@ import { Handlers } from './handlers';
 
 export function saveProperties(port: Number) {
 	const vsFs = vscode.workspace.fs;
-	const dotDir = Uri.parse(getProjectFilePath('.vscode')!);
+	const dotDir = Uri.file(getProjectFilePath('.vscode')!);
 	if (!projectPathExists('.vscode')) {
 		vsFs.createDirectory(dotDir);
 		console.log(dotDir.fsPath + ' created');
