@@ -18,7 +18,7 @@ export function saveProperties(port: Number) {
 
 export function deleteProperties() {
 	if (projectPathExists('.vscode', '.copilot-plugin')) {
-		const pluginDotFile = Uri.parse(getProjectFilePath('.vscode', '.copilot-plugin')!);
+		const pluginDotFile = Uri.file(getProjectFilePath('.vscode', '.copilot-plugin')!);
 		vscode.workspace.fs.delete(pluginDotFile);
 	}
 }

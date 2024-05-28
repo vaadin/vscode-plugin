@@ -45,7 +45,7 @@ export async function writeFileHandler(data: WriteCommandData) {
             needsConfirmation: false
         } as vscode.WorkspaceEditEntryMetadata;
 
-        const uri = Uri.parse(data.file);
+        const uri = Uri.file(data.file);
         const content = new TextEncoder().encode(data.content);
 
         if (fs.existsSync(data.file)) {
@@ -75,7 +75,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
     for (var i in data.files) {
         const file = data.files[i];
         if (isFileInsideProject(file)) {
-            const uri = Uri.parse(file);
+            const uri = Uri.file(file);
             const document = await vscode.workspace.openTextDocument(uri);
             // editor must be opened to have undo/redo context
             await vscode.window.showTextDocument(document, { preview: false });
@@ -95,7 +95,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
 
 export async function showInIdeHandler(data: ShowInIdeCommandData) {
     if (isFileInsideProject(data.file)) {
-        const document = await vscode.workspace.openTextDocument(Uri.parse(data.file));
+        const document = await vscode.workspace.openTextDocument(Uri.file(data.file));
         const editor = await vscode.window.showTextDocument(document, { preview: false });
         const position = new vscode.Position(data.line, data.column);
         editor.selection = new vscode.Selection(position, position);
