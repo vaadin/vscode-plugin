@@ -32,7 +32,8 @@ export function readProjectFile(...parts: string[]): string | undefined {
 export function isFileInsideProject(file: string): boolean {
   const projectRoot = getProjectFilePath()!;
   if (fs.existsSync(file)) {
-    return path.resolve(file).startsWith(projectRoot);
+    const resolvedFile = path.resolve(file).toLowerCase();
+    return resolvedFile.startsWith(projectRoot.toLowerCase());
   } else {
     return isFileInsideProject(path.dirname(file));
   }
