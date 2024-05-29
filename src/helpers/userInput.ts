@@ -86,6 +86,6 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
         exampleViews,
         authentication,
         version
-    }
+    };
 
 }
