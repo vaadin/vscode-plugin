@@ -40,7 +40,7 @@ async function createNewProject() {
 			return;
 		}
 		downloadAndExtract(model);
-	})
+	});
 }
 
 function isVaadinProject(): boolean {

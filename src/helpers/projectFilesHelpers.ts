@@ -64,7 +64,7 @@ export async function downloadAndExtract(model: ProjectModel) {
 }
 
 function getDownloadUrl(model: ProjectModel) {
-  let preset
+  let preset;
   if (model.exampleViews.indexOf('Flow') !== undefined) {
     preset = "default";
   } else if (model.exampleViews.indexOf('Hilla') !== undefined) {
@@ -74,12 +74,12 @@ function getDownloadUrl(model: ProjectModel) {
   }
 
   if (model.authentication) {
-    preset += '&preset=partial-auth'
+    preset += '&preset=partial-auth';
   }
   if (model.version === 'Prerelease') {
-    preset += '&preset=partial-prerelease'
+    preset += '&preset=partial-prerelease';
   }
 
-  return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`
+  return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`;
 
 }
