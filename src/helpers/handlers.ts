@@ -63,7 +63,11 @@ export async function writeFileHandler(data: WriteCommandData) {
         await vscode.workspace.applyEdit(workspaceEdit);
 
         // save changes
-        vscode.workspace.openTextDocument(uri).then(doc => doc.save());
+        vscode.workspace.openTextDocument(uri).then(doc => {
+            doc.save();
+            vscode.window.showTextDocument(doc);
+        });
+
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }
