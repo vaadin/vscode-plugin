@@ -16,6 +16,7 @@ statusBarItem.show();
 export async function startServer() {
 
     if (httpServer.listening) {
+        console.log('Vaadin Copilot integration is already running');
         return;
     }
 
@@ -30,6 +31,7 @@ export async function startServer() {
 export function stopServer() {
 
     if (!httpServer.listening) {
+        console.log('Vaadin Copilot integration is not running');
         return;
     }
 
@@ -60,11 +62,13 @@ function handleClientData(data: any) {
 function postStartup() {
     const port = (httpServer.address() as AddressInfo).port;
     saveProperties(port);
+    console.log('Vaadin Copilot integration started');
     updateStatusBarItem(true);
 }
 
 function postShutdown() {
     deleteProperties();
+    console.log('Vaadin Copilot integration stopped');
     updateStatusBarItem(false);
 }
 
