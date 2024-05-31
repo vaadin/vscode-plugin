@@ -16,7 +16,7 @@ statusBarItem.show();
 export async function startServer() {
 
     if (httpServer.listening) {
-        vscode.window.showInformationMessage('Vaadin Copilot integration is already running');
+        console.log('Vaadin Copilot integration is already running');
         return;
     }
 
@@ -31,7 +31,7 @@ export async function startServer() {
 export function stopServer() {
 
     if (!httpServer.listening) {
-        vscode.window.showInformationMessage('Vaadin Copilot integration is not running');
+        console.log('Vaadin Copilot integration is not running');
         return;
     }
 
@@ -62,13 +62,13 @@ function handleClientData(data: any) {
 function postStartup() {
     const port = (httpServer.address() as AddressInfo).port;
     saveProperties(port);
-    vscode.window.showInformationMessage('Vaadin Copilot integration started');
+    console.log('Vaadin Copilot integration started');
     updateStatusBarItem(true);
 }
 
 function postShutdown() {
     deleteProperties();
-    vscode.window.showInformationMessage('Vaadin Copilot integration stopped');
+    console.log('Vaadin Copilot integration stopped');
     updateStatusBarItem(false);
 }
 
