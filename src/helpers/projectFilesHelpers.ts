@@ -65,9 +65,9 @@ export async function downloadAndExtract(model: ProjectModel) {
 
 function getDownloadUrl(model: ProjectModel) {
   let preset;
-  if (model.exampleViews.indexOf('Flow') !== undefined) {
+  if (model.exampleViews.indexOf('Flow') !== -1) {
     preset = "default";
-  } else if (model.exampleViews.indexOf('Hilla') !== undefined) {
+  } else if (model.exampleViews.indexOf('Hilla') !== -1) {
     preset = "react";
   } else {
     preset = "empty";
