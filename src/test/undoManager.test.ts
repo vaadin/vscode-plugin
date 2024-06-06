@@ -11,7 +11,7 @@ suite('Undo Manager Test Suite', () => {
 	test('Cannot undo redo on fresh file', async () => {
         const undoManager = new UndoManager();
         const doc = await openDoc;
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
         assert.equal(undoManager.canUndoRedo(doc, 'redo'), false);
 	});
 
@@ -19,7 +19,7 @@ suite('Undo Manager Test Suite', () => {
         const undoManager = new UndoManager();
         const doc = await openDoc;
         undoManager.documentSaveListener(doc);
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
         assert.equal(undoManager.canUndoRedo(doc, 'redo'), false);
 	});
 
@@ -27,7 +27,7 @@ suite('Undo Manager Test Suite', () => {
         const undoManager = new UndoManager();
         const doc = await openDoc;
         undoManager.pluginFileWritten(doc);
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
         assert.equal(undoManager.canUndoRedo(doc, 'redo'), false);
 	});
 
@@ -36,7 +36,7 @@ suite('Undo Manager Test Suite', () => {
         const doc = await openDoc;
         undoManager.pluginFileWritten(doc);
         undoManager.pluginUndoRedoPerformed(doc, 'undo');
-		assert.equal(undoManager.canUndoRedo(doc, 'redo'), true);
+        assert.equal(undoManager.canUndoRedo(doc, 'redo'), true);
 	});
 
     test('Cannot undo redo after user alters file content', async () => {
@@ -44,7 +44,7 @@ suite('Undo Manager Test Suite', () => {
         const doc = await openDoc;
         undoManager.pluginFileWritten(doc);
         undoManager.documentSaveListener(doc);
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
         assert.equal(undoManager.canUndoRedo(doc, 'redo'), false);
 	});
 
@@ -54,14 +54,14 @@ suite('Undo Manager Test Suite', () => {
         undoManager.lockDocument(doc);
         undoManager.pluginFileWritten(doc);
         undoManager.documentSaveListener(doc);
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
 	});
 
     test('Cannot undo if counter is 0', async () => {
         const undoManager = new UndoManager();
         const doc = await openDoc;
         undoManager.pluginFileWritten(doc);
-		assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
+        assert.equal(undoManager.canUndoRedo(doc, 'undo'), true);
         undoManager.pluginUndoRedoPerformed(doc, 'undo');
         assert.equal(undoManager.canUndoRedo(doc, 'undo'), false);
 	});
