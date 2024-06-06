@@ -46,7 +46,7 @@ export class UndoManager {
         return this.locks.has(this.getKey(doc));
     }
     
-    // increments undo counter after user sa
+    // update counters after file saved via plugin
     public pluginFileWritten(doc: TextDocument) {
         // increment undo counter on file save
         this.increment(doc, 'undo');
@@ -55,7 +55,7 @@ export class UndoManager {
         this.redos.set(this.getKey(doc), 0);
     }
     
-    // updated counters after undo or redo performed via plugin
+    // update counters after undo or redo performed via plugin
     public pluginUndoRedoPerformed(doc: TextDocument, op: Operation) {       
         // decrement undo counter for undo, redo for redo
         this.decrement(doc, op === 'undo' ? 'undo' : 'redo');
