@@ -58,31 +58,31 @@ export class UndoManager {
     // updated counters after undo or redo performed via plugin
     public pluginUndoRedoPerformed(doc: TextDocument, op: Operation) {       
         // decrement undo counter for undo, redo for redo
-        this.decrement(doc, op == 'undo' ? 'undo' : 'redo');
+        this.decrement(doc, op === 'undo' ? 'undo' : 'redo');
     
         // increment redo counter undo, undo counter for redo
-        this.increment(doc, op == 'undo' ? 'redo' : 'undo');
+        this.increment(doc, op === 'undo' ? 'redo' : 'undo');
     }
     
     // checks if undo redo can be performed
     public canUndoRedo(doc: TextDocument, op: Operation): boolean {
         const key = this.getKey(doc);
-        const map = op == 'undo' ? this.undos : this.redos;
+        const map = op === 'undo' ? this.undos : this.redos;
         return map.has(key) ? map.get(key)! > 0 : false;
     }
     
     private increment(doc: TextDocument, op: Operation) {
         const key = this.getKey(doc);
-        const map = op == 'undo' ? this.undos : this.redos;
+        const map = op === 'undo' ? this.undos : this.redos;
         const value = map.get(key) ?? 0;
         map.set(key, value + 1);
     }
     
     private decrement(doc: TextDocument, op: Operation) {
         const key = this.getKey(doc);
-        const map = op == 'undo' ? this.undos : this.redos;
+        const map = op === 'undo' ? this.undos : this.redos;
         const value = map.get(key);
-        if (value != undefined) {
+        if (value !== undefined) {
             map.set(key, value - 1);
         }
     }

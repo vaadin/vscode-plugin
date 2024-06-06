@@ -106,7 +106,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
                     }
                     undoManager.unlockDocument(doc);
                 });
-            })
+            });
         } else {
             console.warn("File " + file + " is not a part of a project");
         }

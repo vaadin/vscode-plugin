@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		startServer();
 	}
 
-	vscode.workspace.onDidSaveTextDocument(doc => undoManager.documentSaveListener(doc))
+	vscode.workspace.onDidSaveTextDocument(doc => undoManager.documentSaveListener(doc));
 
 }
 
