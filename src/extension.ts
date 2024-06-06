@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { downloadAndExtract, projectPathExists, readProjectFile } from './helpers/projectFilesHelpers';
 import { statusBarItem, startServer, stopServer } from './helpers/server';
 import { newProjectUserInput } from './helpers/userInput';
+import { undoManager } from './helpers/undoManager';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -24,6 +25,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (isVaadinProject()) {
 		startServer();
 	}
+
+	vscode.workspace.onDidSaveTextDocument(doc => undoManager.documentSaveListener(doc))
 
 }
 
