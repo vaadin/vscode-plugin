@@ -3,13 +3,12 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import * as fs from 'fs';
 import { isFileInsideProject } from './projectFilesHelpers';
+import { undoManager } from './undoManager';
 
 export enum Handlers {
     WRITE = "write",
-    // not supported currently due to VSCode
-    // undo stack management
-    // UNDO = "undo",
-    // REDO = "redo",
+    UNDO = "undo",
+    REDO = "redo",
     SHOW_IN_IDE = "showInIde",
     REFRESH = "refresh"
 }
@@ -49,6 +48,11 @@ export async function writeFileHandler(data: WriteCommandData) {
         const content = new TextEncoder().encode(data.content);
 
         if (fs.existsSync(data.file)) {
+            const currentContent = fs.readFileSync(data.file);
+            if (currentContent.equals(content)) {
+                console.log('File ' + uri + ' unchanged, not saving');
+                return;
+            }
             vscode.window.visibleTextEditors;
             const entireRange = new vscode.Range(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
             workspaceEdit.replace(uri, entireRange, data.content, metadata);
@@ -64,7 +68,13 @@ export async function writeFileHandler(data: WriteCommandData) {
 
         // save changes
         vscode.workspace.openTextDocument(uri).then(doc => {
-            doc.save();
+            undoManager.lockDocument(doc);
+            doc.save().then(result => {
+                if (result) {
+                    undoManager.pluginFileWritten(doc);
+                }
+                undoManager.unlockDocument(doc);
+            });
             vscode.window.showTextDocument(doc);
         });
 
@@ -81,12 +91,22 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
         if (isFileInsideProject(file)) {
             const uri = Uri.file(file);
             const document = await vscode.workspace.openTextDocument(uri);
+            if (!undoManager.canUndoRedo(document, operation)) {
+                continue;
+            }
             // editor must be opened to have undo/redo context
             await vscode.window.showTextDocument(document, { preview: false });
             // undo/redo performed as standard IDE command
             await vscode.commands.executeCommand(operation);
-            await vscode.workspace.save(uri);
-            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            vscode.workspace.openTextDocument(uri).then(doc => {
+                undoManager.lockDocument(doc);
+                doc.save().then(result => {
+                    if (result) {
+                        undoManager.pluginUndoRedoPerformed(document, operation);
+                    }
+                    undoManager.unlockDocument(doc);
+                });
+            });
         } else {
             console.warn("File " + file + " is not a part of a project");
         }

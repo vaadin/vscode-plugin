@@ -4,7 +4,7 @@ import express from 'express';
 import { Server, createServer } from "http";
 import { deleteProperties, saveProperties } from './properties';
 import { AddressInfo } from 'net';
-import { writeFileHandler, showInIdeHandler, CommandRequest, Handlers, refresh } from './handlers';
+import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Handlers, refresh } from './handlers';
 
 const httpServer: Server = createServer(express());
 
@@ -44,12 +44,12 @@ function handleClientData(data: any) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
             break;
-        // case Handlers.UNDO:
-        //     undoRedoHandler(request.data, 'undo');
-        //     break;
-        // case Handlers.REDO:
-        //     undoRedoHandler(request.data, 'redo');
-        //     break;
+        case Handlers.UNDO:
+            undoRedoHandler(request.data, 'undo');
+            break;
+        case Handlers.REDO:
+            undoRedoHandler(request.data, 'redo');
+            break;
         case Handlers.SHOW_IN_IDE:
             showInIdeHandler(request.data);
             break;
