@@ -11,7 +11,6 @@ const httpServer: Server = createServer(express());
 export let statusBarItem: vscode.StatusBarItem;
 statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
 updateStatusBarItem(false);
-statusBarItem.show();
 
 export async function startServer() {
 
