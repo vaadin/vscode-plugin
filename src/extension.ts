@@ -3,6 +3,7 @@ import { downloadAndExtract, projectPathExists, readProjectFile } from './helper
 import { statusBarItem, startServer } from './helpers/server';
 import { newProjectUserInput } from './helpers/userInput';
 import { undoManager } from './helpers/undoManager';
+import { deleteProperties } from './helpers/properties';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -23,6 +24,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	vscode.workspace.onDidSaveTextDocument(doc => undoManager.documentSaveListener(doc));
+}
+
+export function deactivate() {
+	deleteProperties();
+    console.log('Vaadin Copilot integration stopped');
 }
 
 async function createNewProject() {

@@ -33,8 +33,6 @@ export async function startServer() {
         statusBarItem.show();
         postStartup(server);
     });
-
-    server.on('close', postShutdown);
 }
 
 function handleClientData(request: CommandRequest): boolean {
@@ -61,9 +59,4 @@ function handleClientData(request: CommandRequest): boolean {
 function postStartup(httpServer: Server) {
     saveProperties(`http://127.0.0.1:${(httpServer.address() as AddressInfo).port}${postPath}`);
     console.log('Vaadin Copilot integration started');
-}
-
-function postShutdown() {
-    deleteProperties();
-    console.log('Vaadin Copilot integration stopped');
 }
