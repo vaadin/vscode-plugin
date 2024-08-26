@@ -8,7 +8,7 @@ import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Ha
 import { Server } from 'http';
 import { randomUUID } from 'crypto';
 
-const app: Express = express()
+const app: Express = express();
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
 
@@ -26,7 +26,7 @@ export async function startServer() {
         } else {
             res.sendStatus(400);
         }
-    })
+    });
 
     const server = app.listen(0, 'localhost');
     server.on('listening', () => {
