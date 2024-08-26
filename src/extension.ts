@@ -28,6 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
 	deleteProperties();
+	statusBarItem.hide();
     console.log('Vaadin Copilot integration stopped');
 }
 
