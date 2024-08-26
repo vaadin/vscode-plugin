@@ -47,11 +47,6 @@
         "category": "Vaadin"
       },
       {
-        "command": "vaadin.stop",
-        "title": "Stop Vaadin Copilot integration",
-        "category": "Vaadin"
-      },
-      {
         "command": "vaadin.newProject",
         "title": "Generate new Vaadin project",
         "category": "Vaadin"
@@ -64,13 +59,6 @@
           "fontPath": "./resources/vaadin-vscode.woff",
           "fontCharacter": "\\e800"
         }
-      },
-      "server-stopped": {
-        "description": "Vaadin icon for stopped server",
-        "default": {
-          "fontPath": "./resources/vaadin-vscode.woff",
-          "fontCharacter": "\\e802"
-        }
       }
     }
   },
@@ -78,7 +66,7 @@
     "@types/express": "4.17.21",
     "adm-zip": "^0.5.12",
     "axios": "^1.6.8",
-    "express": "4.19.1",
+    "express": "^4.19.2",
     "js-convert-case": "^4.2.0",
     "properties-file": "^3.5.3",
     "socket.io": "4.7.5"
