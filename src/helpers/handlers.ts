@@ -7,6 +7,7 @@ import { undoManager } from './undoManager';
 
 export enum Handlers {
     WRITE = "write",
+    WRITE_BASE64 = "writeBase64",
     UNDO = "undo",
     REDO = "redo",
     SHOW_IN_IDE = "showInIde",
@@ -80,6 +81,13 @@ export async function writeFileHandler(data: WriteCommandData) {
 
     } else {
         console.warn("File " + data.file + " is not a part of a project");
+    }
+}
+
+export async function writeBase64FileHandler(data: WriteCommandData) {
+    if (isFileInsideProject(data.file)) {
+        let buff = Buffer.from(data.content, 'base64');
+        fs.writeFileSync(data.file, buff);
     }
 }
 
