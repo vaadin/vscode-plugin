@@ -2,18 +2,17 @@ import * as vscode from 'vscode';
 
 import express from 'express';
 import { Express } from 'express';
-import { deleteProperties, saveProperties } from './properties';
+import { saveProperties } from './properties';
 import { AddressInfo } from 'net';
 import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Handlers, refresh } from './handlers';
-import { Server } from 'http';
 import { randomUUID } from 'crypto';
+import { Server } from 'http';
 
 const app: Express = express();
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
 
-
-const postPath = '/endpoint-' + randomUUID();
+const postPath = '/copilot-' + randomUUID();
 
 export const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
 statusBarItem.text = `$(server-running)`;
@@ -30,7 +29,6 @@ export async function startServer() {
 
     const server = app.listen(0, 'localhost');
     server.on('listening', () => {
-        statusBarItem.show();
         postStartup(server);
     });
 }
@@ -57,6 +55,8 @@ function handleClientData(request: CommandRequest): boolean {
 }
 
 function postStartup(httpServer: Server) {
-    saveProperties(`http://127.0.0.1:${(httpServer.address() as AddressInfo).port}${postPath}`);
+    statusBarItem.show();
+    const port = (httpServer.address() as AddressInfo).port;
+    saveProperties(`http://127.0.0.1:${port}${postPath}`);
     console.log('Vaadin Copilot integration started');
 }
