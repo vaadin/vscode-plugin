@@ -4,7 +4,7 @@ import { PropertiesEditor } from 'properties-file/editor';
 import { getProjectFilePath, projectPathExists } from './projectFilesHelpers';
 import { Handlers } from './handlers';
 
-export function saveProperties(port: Number) {
+export function saveProperties(endpoint: string) {
 	const vsFs = vscode.workspace.fs;
 	const dotDir = Uri.file(getProjectFilePath('.vscode')!);
 	if (!projectPathExists('.vscode')) {
@@ -12,7 +12,7 @@ export function saveProperties(port: Number) {
 		console.log(dotDir.fsPath + ' created');
 	}
 	const pluginDotFile = Uri.joinPath(dotDir, '.copilot-plugin');
-	const properties = createProperties(port);
+	const properties = createProperties(endpoint);
 	vsFs.writeFile(pluginDotFile, Buffer.from(properties.format()));
 }
 
@@ -23,11 +23,11 @@ export function deleteProperties() {
 	}
 }
 
-function createProperties(port: Number): PropertiesEditor {
+function createProperties(endpoint: string): PropertiesEditor {
 	const editor = new PropertiesEditor('# Vaadin Copilot Integration Runtime Properties');
 	editor.insertComment(new Date().toUTCString());
 	editor.insert('ide', 'vscode');
-	editor.insert('port', port.toString());
+	editor.insert('endpoint', endpoint);
 	editor.insert('version', getPluginVersion());
 	editor.insert('supportedActions', Object.values(Handlers).join(','));
 	return editor;

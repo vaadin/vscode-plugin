@@ -1,84 +1,62 @@
 import * as vscode from 'vscode';
 
 import express from 'express';
-import { Server, createServer } from "http";
-import { deleteProperties, saveProperties } from './properties';
+import { Express } from 'express';
+import { saveProperties } from './properties';
 import { AddressInfo } from 'net';
 import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Handlers, refresh } from './handlers';
+import { randomUUID } from 'crypto';
+import { Server } from 'http';
 
-const httpServer: Server = createServer(express());
+const app: Express = express();
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
 
-export let statusBarItem: vscode.StatusBarItem;
-statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
-updateStatusBarItem(false);
+const postPath = '/copilot-' + randomUUID();
+
+export const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
+statusBarItem.text = `$(server-running)`;
+statusBarItem.tooltip = 'Vaadin Copilot integration is running';
 
 export async function startServer() {
-
-    if (httpServer.listening) {
-        console.log('Vaadin Copilot integration is already running');
-        return;
-    }
-
-    httpServer.listen(0, 'localhost', postStartup);
-
-    httpServer.on('connection', socket => {
-        socket.on('data', handleClientData);
+    app.post(postPath, (req, res) => {
+        if (handleClientData(req.body)) {
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(400);
+        }
     });
 
+    const server = app.listen(0, 'localhost');
+    server.on('listening', () => {
+        postStartup(server);
+    });
 }
 
-export function stopServer() {
-
-    if (!httpServer.listening) {
-        console.log('Vaadin Copilot integration is not running');
-        return;
-    }
-
-    httpServer.close(postShutdown);
-}
-
-function handleClientData(data: any) {
-    const request = JSON.parse(data.toString()) as CommandRequest;
+function handleClientData(request: CommandRequest): boolean {
     switch (request.command) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
-            break;
+            return true;
         case Handlers.UNDO:
             undoRedoHandler(request.data, 'undo');
-            break;
+            return true;
         case Handlers.REDO:
             undoRedoHandler(request.data, 'redo');
-            break;
+            return true;
         case Handlers.SHOW_IN_IDE:
             showInIdeHandler(request.data);
-            break;
+            return true;
         case Handlers.REFRESH:
             refresh();
-            break;
+            return true;
     }
+    return false;
 }
 
-function postStartup() {
+function postStartup(httpServer: Server) {
+    statusBarItem.show();
     const port = (httpServer.address() as AddressInfo).port;
-    saveProperties(port);
+    saveProperties(`http://127.0.0.1:${port}${postPath}`);
     console.log('Vaadin Copilot integration started');
-    updateStatusBarItem(true);
-}
-
-function postShutdown() {
-    deleteProperties();
-    console.log('Vaadin Copilot integration stopped');
-    updateStatusBarItem(false);
-}
-
-function updateStatusBarItem(running: boolean) {
-    if (running) {
-        statusBarItem.text = `$(server-running)`;
-        statusBarItem.tooltip = 'Vaadin Copilot integration is running, click to stop';
-        statusBarItem.command = 'vaadin.stop';
-    } else {
-        statusBarItem.text = `$(server-stopped)`;
-        statusBarItem.tooltip = 'Vaadin Copilot integration is not running, click to start';
-        statusBarItem.command = 'vaadin.start';
-    }
 }
