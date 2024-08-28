@@ -32,7 +32,6 @@ export function focusWindow() {
             'vaadin',
             new vscode.ShellExecution(`${escapePath(process.env._!)} "${getProjectFilePath()}"`)
         );
-        vscode.tasks.executeTask(task);
-        closeElectronTerminal();
+        vscode.tasks.executeTask(task).then(() => closeElectronTerminal());
     }
 }
