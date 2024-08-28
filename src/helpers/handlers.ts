@@ -4,6 +4,7 @@ import { Uri } from 'vscode';
 import * as fs from 'fs';
 import { isFileInsideProject } from './projectFilesHelpers';
 import { undoManager } from './undoManager';
+import { focusWindow } from './ideUtils';
 
 export enum Handlers {
     WRITE = "write",
@@ -126,6 +127,7 @@ export async function showInIdeHandler(data: ShowInIdeCommandData) {
         const range = new vscode.Range(data.line, data.column, data.line, data.column);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
         console.log('Opening document ' + data.file + ' at ' + data.line + ':' + data.column);
+        focusWindow();
     } else {
         console.warn("File " + data.file + " is not a part of a project");
     }
