@@ -12,26 +12,34 @@ function escapePath(path: string): string {
 }
 
 const closeElectronTerminal = (n: number = 100) => setTimeout(() => {
-    const electronTerminal = vscode.window.terminals.find(v => v.name === 'Electron');
+    const electronTerminal = vscode.window.terminals.find(v => v.name.indexOf('bringToFront') !== -1);
     if (electronTerminal) {
-        electronTerminal.dispose();
+        electronTerminal.sendText('ok');
     } else if (n > 0) {
-        closeElectronTerminal(n--);
+        closeElectronTerminal(n - 1);
     }
 }, 100);
 
 // using exec() spawns child_process and it does not focus window, workaround as below works
-export function focusWindow() {
-    if (process.env._) {
-        const task = new vscode.Task(
-            {   
-                type: 'shell',
-            },
-            vscode.TaskScope.Workspace,
-            'bringToFront',
-            'vaadin',
-            new vscode.ShellExecution(`${escapePath(process.env._!)} "${getProjectFilePath()}"`)
-        );
-        vscode.tasks.executeTask(task).then(() => closeElectronTerminal());
+export async function focusWindow() {
+    let command: string;
+    if (process.platform === 'win32') {
+        command = `& '${process.execPath}' '${getProjectFilePath()}'`;
+    } else {
+        command = `${escapePath(process.env._!)} "${getProjectFilePath()!}"`;
     }
+    console.log(command);
+    const task = new vscode.Task(
+        {   
+            type: 'shell',
+        },
+        vscode.TaskScope.Workspace,
+        'bringToFront',
+        'vaadin',
+        new vscode.ShellExecution(command)
+    );
+    vscode.tasks.executeTask(task).then(() => closeElectronTerminal(), 
+    error => {
+        console.error(error);
+    });
 }
