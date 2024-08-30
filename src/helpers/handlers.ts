@@ -10,7 +10,7 @@ export enum Handlers {
     WRITE_BASE64 = "writeBase64",
     UNDO = "undo",
     REDO = "redo",
-    SHOW_IN_IDE = "showInIde",
+    // SHOW_IN_IDE = "showInIde",
     REFRESH = "refresh"
 }
 
@@ -125,6 +125,7 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
     }
 }
 
+// not used temporarily as it does not bring Window to front
 export async function showInIdeHandler(data: ShowInIdeCommandData) {
     if (isFileInsideProject(data.file)) {
         const document = await vscode.workspace.openTextDocument(Uri.file(data.file));
