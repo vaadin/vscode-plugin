@@ -4,7 +4,7 @@ import express from 'express';
 import { Express } from 'express';
 import { saveProperties } from './properties';
 import { AddressInfo } from 'net';
-import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Handlers, refresh } from './handlers';
+import { writeFileHandler, showInIdeHandler, undoRedoHandler, CommandRequest, Handlers, refresh, writeBase64FileHandler } from './handlers';
 import { randomUUID } from 'crypto';
 import { Server } from 'http';
 
@@ -37,6 +37,9 @@ function handleClientData(request: CommandRequest): boolean {
     switch (request.command) {
         case Handlers.WRITE:
             writeFileHandler(request.data);
+            return true;
+        case Handlers.WRITE_BASE64:
+            writeBase64FileHandler(request.data);
             return true;
         case Handlers.UNDO:
             undoRedoHandler(request.data, 'undo');
