@@ -63,13 +63,13 @@
     }
   },
   "dependencies": {
-    "@types/express": "4.17.21",
+    "@types/express": "5.0.0",
     "adm-zip": "^0.5.12",
     "axios": "^1.6.8",
-    "express": "^4.19.2",
+    "express": "^4.21.1",
     "js-convert-case": "^4.2.0",
     "properties-file": "^3.5.3",
-    "socket.io": "4.7.5"
+    "socket.io": "^4.8.0"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
