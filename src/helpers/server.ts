@@ -21,9 +21,9 @@ statusBarItem.tooltip = 'Vaadin Copilot integration is running';
 export async function startServer() {
     app.post(postPath, (req, res) => {
         if (handleClientData(req.body)) {
-            res.sendStatus(200);
+            res.status(200).contentType('json').send();
         } else {
-            res.sendStatus(400);
+            res.status(400).contentType('json').send();
         }
     });
 
