@@ -5,7 +5,7 @@ import { findRuntimes, IJavaRuntime } from 'jdk-utils';
 import { accessSync, copyFileSync, mkdirSync, writeFileSync } from 'fs';
 
 import AdmZip from 'adm-zip';
-import { join, resolve } from 'path';
+import { join, parse, resolve } from 'path';
 import JetbrainsRuntimeUtil from './jetbrainsUtil';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
@@ -197,19 +197,22 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
         writeFileSync(launchJsonPath, JSON.stringify(launchConfig, null, 4));
     }
 
+    const mainClass = await findSpringBootApplicationMainClass();
+
     const launchConfiguration = workspace.getConfiguration('launch')
     const configurations = launchConfiguration.get<any[]>('configurations');
 
     let configEntry = configurations?.find(c => c.name === LAUNCH_CONFIGURATION_NAME);
     if (configEntry) {
-        configEntry.javaExec = getJavaExecutable(javaHome)
+        configEntry.javaExec = getJavaExecutable(javaHome);
+        configEntry.mainClass = mainClass;
     } else {
         configEntry = {
             'type': 'java',
             'name': LAUNCH_CONFIGURATION_NAME,
             'request': 'launch',
             'javaExec': getJavaExecutable(javaHome),
-            'mainClass': 'com.example.application.Application',
+            'mainClass': mainClass,
             'vmArgs': '-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar'
         }
         configurations?.unshift(configEntry);
@@ -244,4 +247,21 @@ function getJavaHome(jdkHome: string): string {
 function getJavaExecutable(javaHome: string) {
     const bin = process.platform === 'win32' ? 'java.exe' : 'java';
     return join(javaHome, 'bin', bin);
+}
+
+async function findSpringBootApplicationMainClass(): Promise<string | undefined> {
+    const files = await workspace.findFiles('**/*.java', '**/target/**');
+    for (const file of files) {
+        try {
+            const document = await workspace.openTextDocument(file);
+            const content = document.getText();
+            if (content.includes('@SpringBootApplication')) {
+                const className = parse(file.fsPath).name;
+                const match = content.match(/package\s+([a-zA-Z0-9_.]+);/);
+                return match ? match[1] + '.' + className : className;
+            }
+        } catch (error) {
+            console.error(`Error reading file: ${file.fsPath}`, error);
+        }
+    }
 }
