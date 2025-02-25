@@ -4,6 +4,7 @@ import { statusBarItem, startServer } from './helpers/server';
 import { newProjectUserInput } from './helpers/userInput';
 import { undoManager } from './helpers/undoManager';
 import { deleteProperties } from './helpers/properties';
+import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -13,11 +14,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	let newProjectCommand = vscode.commands.registerCommand('vaadin.newProject', function () {
 		createNewProject();
 	});
+	let setupHotswapCommand = vscode.commands.registerCommand('vaadin.setupHotswap', function () {
+		setupHotswap(context);
+	});
+	let debugUsingHotswapCommand = vscode.commands.registerCommand('vaadin.debugUsingHotswap', function () {
+		debugUsingHotswap(context);
+	});
 
 	// disposables
 	context.subscriptions.push(statusBarItem);
 	context.subscriptions.push(startServerCommand);
 	context.subscriptions.push(newProjectCommand);
+	context.subscriptions.push(setupHotswapCommand);
+	context.subscriptions.push(debugUsingHotswapCommand);
 
 	if (isVaadinProject()) {
 		startServer();

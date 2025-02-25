@@ -50,6 +50,16 @@
         "command": "vaadin.newProject",
         "title": "Generate new Vaadin project",
         "category": "Vaadin"
+      },
+      {
+        "command": "vaadin.setupHotswap",
+        "title": "Setup Hotswap Agent",
+        "category": "Vaadin"
+      },
+      {
+        "command": "vaadin.debugUsingHotswap",
+        "title": "Debug using Hotswap Agent",
+        "category": "Vaadin"
       }
     ],
     "icons": {
@@ -64,9 +74,10 @@
   },
   "dependencies": {
     "@types/express": "5.0.0",
-    "adm-zip": "^0.5.12",
+    "adm-zip": "^0.5.16",
     "axios": "^1.6.8",
     "express": "^4.21.1",
+    "jdk-utils": "^0.5.1",
     "js-convert-case": "^4.2.0",
     "properties-file": "^3.5.3",
     "socket.io": "^4.8.0"
@@ -80,7 +91,9 @@
     "@typescript-eslint/parser": "^7.0.2",
     "@vscode/test-cli": "^0.0.6",
     "@vscode/test-electron": "^2.3.9",
+    "adm-zip": "^0.5.16",
     "eslint": "^8.56.0",
+    "jdk-utils": "^0.5.1",
     "typescript": "^5.3.3"
   }
 }
