@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 import { ProjectModel } from './userInput';
@@ -98,7 +98,12 @@ export function resolveVaadinHomeDirectory(): string {
     const vaadinHome = path.join(userHome, '.vaadin');
 
     // Ensure the directory exists
-    fs.ensureDirSync(vaadinHome);
+    try {
+      fs.accessSync(vaadinHome);
+    } catch {
+      fs.mkdirSync(vaadinHome);
+    }
+    
 
     return vaadinHome;
 }

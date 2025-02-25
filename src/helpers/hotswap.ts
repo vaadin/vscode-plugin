@@ -106,7 +106,11 @@ async function setupJavaHome(): Promise<string | undefined> {
         placeHolder: 'Choose existing JetBrains Runtime or download latest version.'
     });
 
-    if (!selected?.item) {
+    if (!selected) {
+        return;
+    }
+
+    if (!selected.item) {
         const downloadedJdk = await JetbrainsRuntimeUtil.downloadLatestJBR();
         return downloadedJdk ? getJavaHome(downloadedJdk) : undefined;
     }

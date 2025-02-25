@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as https from 'https';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 import * as tar from 'tar';
@@ -109,7 +109,7 @@ class JetbrainsRuntimeUtil {
                     const extractPath = path.join(jdksPath, filename.replace(TAR_GZ, ""));
 
                     if (!fs.existsSync(jdksPath)) {
-                        fs.mkdirsSync(jdksPath);
+                        fs.mkdirSync(jdksPath, { recursive: true });
                     }
 
                     if (fs.existsSync(extractPath)) {
