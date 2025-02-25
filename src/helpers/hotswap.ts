@@ -1,18 +1,16 @@
 'use strict';
 
-import { commands, debug, env, ExtensionContext, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration } from 'vscode';
+import { commands, debug, ExtensionContext, QuickPickItem, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { findRuntimes, IJavaRuntime } from 'jdk-utils';
-import { accessSync, copyFileSync, mkdirSync, PathLike, writeFileSync } from 'fs';
+import { accessSync, copyFileSync, mkdirSync, writeFileSync } from 'fs';
 
 import AdmZip from 'adm-zip';
 import { join, resolve } from 'path';
+import JetbrainsRuntimeUtil from './jetbrainsUtil';
 
-const JAVA_JDT_LS_JAVA_HOME = 'jdt.ls.java.home';
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
 const HOTSWAPAGENT_JAR = 'hotswap-agent.jar'
 const LAUNCH_CONFIGURATION_NAME = "Debug using Hotswap Agent";
-
-const jetbrainsUri = Uri.parse('https://github.com/JetBrains/JetBrainsRuntime');
 
 class JavaRuntimeQuickPickItem implements QuickPickItem {
     constructor(item: IJavaRuntime | undefined) {
@@ -46,7 +44,6 @@ export async function setupHotswap(context: ExtensionContext) {
         return;
     }
     
-    getJavaConfiguration().update(JAVA_JDT_LS_JAVA_HOME, javaHome);
     getJavaConfiguration().update(JAVA_DEBUG_HOTCODE_REPLACE, 'auto');
 
     if (!await installHotswapJar(context, javaHome)) {
@@ -54,7 +51,7 @@ export async function setupHotswap(context: ExtensionContext) {
         return;
     }
 
-    if (!await updateLaunchConfiguration()) {
+    if (!await updateLaunchConfiguration(javaHome)) {
         showCancellationWarning();
         return;
     }
@@ -101,33 +98,21 @@ export async function debugUsingHotswap(context: ExtensionContext) {
  * Download link is present on top of the list.
  * @returns java home if selected
  */
-async function setupJavaHome(): Promise<string | undefined> {
-    let javaHome: PathLike | undefined = getJavaConfiguration().get(JAVA_JDT_LS_JAVA_HOME);
-    if (javaHome) {
-        try {
-            accessSync(javaHome);
-        } catch {
-            javaHome = undefined;
-        }
-    }
-
-    if (javaHome) {
-        return javaHome.toString();
-    }
-    
+async function setupJavaHome(): Promise<string | undefined> {   
     const runtimes = await findRuntimes({ withVersion: true });
     const items = runtimes.map(r => new JavaRuntimeQuickPickItem(r));
     items.unshift(new JavaRuntimeQuickPickItem(undefined));
     const selected = await window.showQuickPick(items, {
-        placeHolder: 'Choose JetBrains Runtime. Download manually if not present.'
+        placeHolder: 'Choose existing JetBrains Runtime or download latest version.'
     });
 
     if (!selected?.item) {
-        env.openExternal(jetbrainsUri);
-        return undefined;
+        const downloadedJdk = await JetbrainsRuntimeUtil.downloadLatestJBR();
+        return downloadedJdk ? getJavaHome(downloadedJdk) : undefined;
     }
 
-    return selected?.item?.homedir;
+    const selectedJdk = selected?.item?.homedir;
+    return selectedJdk ? getJavaHome(selectedJdk) : undefined;
 }
 
 /**
@@ -157,52 +142,35 @@ function getImplementationVersion(homedir: string): string | undefined {
 }
 
 /**
- * Copies hotswap-agent.jar into java.home/lib/hotswap. Asks for overwrite if present.
+ * Copies hotswap-agent.jar into java.home/lib/hotswap.
  * @param context extension context
  * @param javaHome java home
  * @returns true on success
  */
 async function installHotswapJar(context: ExtensionContext, javaHome: string): Promise<boolean> {
+    
     const hotswapDir = join(javaHome, 'lib', 'hotswap');
     const jarPath = join(hotswapDir, HOTSWAPAGENT_JAR);
-    let installHotswap = true;
+    
     try {
-        accessSync(jarPath);
-        console.log('hotswap-agent.jar found at ' + javaHome);
-        const decision = await window.showQuickPick([ 'Yes', 'No' ], {
-            placeHolder: 'Hotswap Agent already exists, do you want to overwrite it?'
-        });
-        if (!decision) {
-            showCancellationWarning();
-            return false;
-        }
-        installHotswap = decision === 'Yes';
+        accessSync(hotswapDir);
     } catch {
-        // not found, check if lib/hotswap exists
-        try {
-            accessSync(hotswapDir);
-        } catch {
-            // create if not exists
-            if (!mkdirSync(hotswapDir, { recursive: true })) {
-                handleFailure('Cannot create ' + hotswapDir);
-                return false;
-            }
-        }
-    }
-
-    if (installHotswap) {
-        const hotswapAgentJar = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
-        try {
-            copyFileSync(hotswapAgentJar, jarPath);
-        } catch(err: any) {
-            handleFailure(err);
+        // create if not exists
+        if (!mkdirSync(hotswapDir, { recursive: true })) {
+            handleFailure('Cannot create ' + hotswapDir);
             return false;
         }
-        console.log('hotswap-agent.jar installed into ' + jarPath);
-    } else {
-        console.log('Skipping hotswap-agent.jar installation');
     }
-
+    
+    const hotswapAgentJar = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
+    try {
+        copyFileSync(hotswapAgentJar, jarPath);
+    } catch(err: any) {
+        handleFailure(err);
+        return false;
+    }
+    console.log('hotswap-agent.jar installed into ' + jarPath);
+    
     return true;
 }
 
@@ -210,7 +178,7 @@ async function installHotswapJar(context: ExtensionContext, javaHome: string): P
  * Updates launch configuration
  * @returns true on success
  */
-async function updateLaunchConfiguration(): Promise<boolean> {
+async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
 
     if (!workspace.workspaceFolders) {
         window.showErrorMessage("No workspace is open.");
@@ -231,20 +199,21 @@ async function updateLaunchConfiguration(): Promise<boolean> {
 
     const launchConfiguration = workspace.getConfiguration('launch')
     const configurations = launchConfiguration.get<any[]>('configurations');
-    if(configurations?.find(c => c.name === LAUNCH_CONFIGURATION_NAME)) {
-        // configuration already exists
-        return true;
-    }
 
-    const configEntry = {
-        'type': 'java',
-        'name': LAUNCH_CONFIGURATION_NAME,
-        'request': 'launch',
-        'mainClass': 'com.example.application.Application',
-        'vmArgs': '-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar'
+    let configEntry = configurations?.find(c => c.name === LAUNCH_CONFIGURATION_NAME);
+    if (configEntry) {
+        configEntry.javaExec = getJavaExecutable(javaHome)
+    } else {
+        configEntry = {
+            'type': 'java',
+            'name': LAUNCH_CONFIGURATION_NAME,
+            'request': 'launch',
+            'javaExec': getJavaExecutable(javaHome),
+            'mainClass': 'com.example.application.Application',
+            'vmArgs': '-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar'
+        }
+        configurations?.unshift(configEntry);
     }
-
-    configurations?.unshift(configEntry);
 
     await launchConfiguration.update('configurations', configurations);
 
@@ -262,4 +231,17 @@ function showCancellationWarning() {
 function handleFailure(err: Error | string) {
     console.error(err);
     window.showErrorMessage('hotswap-agent.jar installation failed, check logs for details');
+}
+
+function getJavaHome(jdkHome: string): string {
+    if (process.platform === 'darwin') {
+        return join(jdkHome, 'Contents', 'Home');
+    }
+
+    return jdkHome;
+}
+
+function getJavaExecutable(javaHome: string) {
+    const bin = process.platform === 'win32' ? 'java.exe' : 'java';
+    return join(javaHome, 'bin', bin);
 }

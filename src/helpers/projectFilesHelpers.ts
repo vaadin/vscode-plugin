@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import axios from 'axios';
 import { ProjectModel } from './userInput';
@@ -82,4 +82,23 @@ function getDownloadUrl(model: ProjectModel) {
 
   return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`;
 
+}
+
+/**
+ * Resolves the Vaadin home directory (`~/.vaadin`).
+ * Ensures the directory exists before returning it.
+ * @returns The path to the `.vaadin` directory.
+ */
+export function resolveVaadinHomeDirectory(): string {
+    const userHome = process.env.HOME || process.env.USERPROFILE; // Cross-platform user home directory
+    if (!userHome) {
+        throw new Error("Unable to determine user home directory.");
+    }
+
+    const vaadinHome = path.join(userHome, '.vaadin');
+
+    // Ensure the directory exists
+    fs.ensureDirSync(vaadinHome);
+
+    return vaadinHome;
 }

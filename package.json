@@ -75,7 +75,6 @@
   "dependencies": {
     "@types/express": "5.0.0",
     "adm-zip": "^0.5.16",
-    "axios": "^1.6.8",
     "express": "^4.21.1",
     "jdk-utils": "^0.5.1",
     "js-convert-case": "^4.2.0",
@@ -84,6 +83,7 @@
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
+    "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@types/vscode": "^1.87.0",
@@ -92,8 +92,11 @@
     "@vscode/test-cli": "^0.0.6",
     "@vscode/test-electron": "^2.3.9",
     "adm-zip": "^0.5.16",
+    "axios": "^1.7.9",
     "eslint": "^8.56.0",
+    "fs-extra": "^11.3.0",
     "jdk-utils": "^0.5.1",
+    "tar": "^7.4.3",
     "typescript": "^5.3.3"
   }
 }
