@@ -1,9 +1,9 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
-import axios from "axios";
-import { ProjectModel } from "./userInput";
-import AdmZip from "adm-zip";
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import axios from 'axios';
+import { ProjectModel } from './userInput';
+import AdmZip from 'adm-zip';
 
 export function getProjectFilePath(...parts: string[]) {
   if (vscode.workspace.workspaceFolders) {
@@ -25,15 +25,15 @@ export function projectPathExists(...parts: string[]) {
 
 export function readProjectFile(...parts: string[]): string | undefined {
   if (projectPathExists(...parts)) {
-    return fs.readFileSync(getProjectFilePath(...parts)!, "utf-8");
+    return fs.readFileSync(getProjectFilePath(...parts)!, 'utf-8');
   }
 }
 
 export function isFileInsideProject(file: string): boolean {
   const projectRoot = getProjectFilePath()!;
   if (fs.existsSync(file)) {
-    const resolvedFile = path.resolve(file).toLocaleLowerCase("en");
-    return resolvedFile.startsWith(projectRoot.toLocaleLowerCase("en"));
+    const resolvedFile = path.resolve(file).toLocaleLowerCase('en');
+    return resolvedFile.startsWith(projectRoot.toLocaleLowerCase('en'));
   } else {
     return isFileInsideProject(path.dirname(file));
   }
@@ -41,10 +41,10 @@ export function isFileInsideProject(file: string): boolean {
 
 export async function downloadAndExtract(model: ProjectModel) {
   const url = getDownloadUrl(model);
-  console.log("Downloading Vaadin project from " + url);
+  console.log('Downloading Vaadin project from ' + url);
 
-  const response = await axios.get(url, { responseType: "arraybuffer" });
-  const zipBuffer = Buffer.from(response.data, "binary");
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  const zipBuffer = Buffer.from(response.data, 'binary');
 
   const generatedProjectPath = path.join(model.location, model.artifactId);
   const projectPath = path.join(model.location, model.name);
@@ -55,28 +55,28 @@ export async function downloadAndExtract(model: ProjectModel) {
   // use project name from user input for project location
   fs.renameSync(generatedProjectPath, projectPath);
 
-  console.log("Vaadin project created at " + projectPath);
+  console.log('Vaadin project created at ' + projectPath);
 
   // Open the newly created project folder in a new VS Code window
   const uri = vscode.Uri.file(projectPath);
-  vscode.commands.executeCommand("vscode.openFolder", uri, true);
+  vscode.commands.executeCommand('vscode.openFolder', uri, true);
 }
 
 function getDownloadUrl(model: ProjectModel) {
   let preset;
-  if (model.exampleViews.indexOf("Flow") !== -1) {
-    preset = "default";
-  } else if (model.exampleViews.indexOf("Hilla") !== -1) {
-    preset = "react";
+  if (model.exampleViews.indexOf('Flow') !== -1) {
+    preset = 'default';
+  } else if (model.exampleViews.indexOf('Hilla') !== -1) {
+    preset = 'react';
   } else {
-    preset = "empty";
+    preset = 'empty';
   }
 
   if (model.authentication) {
-    preset += "&preset=partial-auth";
+    preset += '&preset=partial-auth';
   }
-  if (model.version === "Prerelease") {
-    preset += "&preset=partial-prerelease";
+  if (model.version === 'Prerelease') {
+    preset += '&preset=partial-prerelease';
   }
 
   return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`;
@@ -90,10 +90,10 @@ function getDownloadUrl(model: ProjectModel) {
 export function resolveVaadinHomeDirectory(): string {
   const userHome = process.env.HOME || process.env.USERPROFILE; // Cross-platform user home directory
   if (!userHome) {
-    throw new Error("Unable to determine user home directory.");
+    throw new Error('Unable to determine user home directory.');
   }
 
-  const vaadinHome = path.join(userHome, ".vaadin");
+  const vaadinHome = path.join(userHome, '.vaadin');
 
   // Ensure the directory exists
   try {

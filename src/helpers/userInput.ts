@@ -1,5 +1,5 @@
-import { toKebabCase } from "js-convert-case";
-import * as vscode from "vscode";
+import { toKebabCase } from 'js-convert-case';
+import * as vscode from 'vscode';
 
 export type ProjectModel = {
   name: string;
@@ -14,11 +14,11 @@ export type ProjectModel = {
 export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   // Project name
   const name = await vscode.window.showInputBox({
-    prompt: "Project Name",
-    value: "New Project",
+    prompt: 'Project Name',
+    value: 'New Project',
     validateInput: (v) => {
       if (!v.match(/^[^\.].*[^\.]$/)) {
-        return "Project name must be valid directory name.";
+        return 'Project name must be valid directory name.';
       }
     },
   });
@@ -28,11 +28,11 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 
   // Artifact Id
   const artifactId = await vscode.window.showInputBox({
-    prompt: "Artifact Id, should be valid Java artifact identifier",
+    prompt: 'Artifact Id, should be valid Java artifact identifier',
     value: toKebabCase(name),
     validateInput: (v) => {
       if (!v.match(/^[0-9a-z\-\_]+$/)) {
-        return "Artifact Id should contain a-z, 0-9, -, _ characters only.";
+        return 'Artifact Id should contain a-z, 0-9, -, _ characters only.';
       }
     },
   });
@@ -41,28 +41,25 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   }
 
   // Example views
-  const exampleViews = await vscode.window.showQuickPick(
-    ["Flow (Java)", "Hilla (React)", "None"],
-    {
-      placeHolder: "Include example views?",
-    },
-  );
+  const exampleViews = await vscode.window.showQuickPick(['Flow (Java)', 'Hilla (React)', 'None'], {
+    placeHolder: 'Include example views?',
+  });
   if (!exampleViews) {
     return;
   }
 
   // Authentication
   const authentication =
-    (await vscode.window.showQuickPick(["Yes", "No"], {
-      placeHolder: "Use authentication?",
-    })) === "Yes";
+    (await vscode.window.showQuickPick(['Yes', 'No'], {
+      placeHolder: 'Use authentication?',
+    })) === 'Yes';
   if (!authentication === undefined) {
     return;
   }
 
   // Version
-  const version = await vscode.window.showQuickPick(["Stable", "Prerelease"], {
-    placeHolder: "Select a Version",
+  const version = await vscode.window.showQuickPick(['Stable', 'Prerelease'], {
+    placeHolder: 'Select a Version',
   });
   if (!version) {
     return;
@@ -73,8 +70,8 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     canSelectFiles: false,
     canSelectFolders: true,
     canSelectMany: false,
-    title: "Project location",
-    openLabel: "Create here",
+    title: 'Project location',
+    openLabel: 'Create here',
   });
   const location = locationUri ? locationUri[0].fsPath : undefined;
   if (!location) {

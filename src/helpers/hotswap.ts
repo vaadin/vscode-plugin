@@ -1,48 +1,32 @@
-"use strict";
+'use strict';
 
-import {
-  commands,
-  debug,
-  ExtensionContext,
-  QuickPickItem,
-  window,
-  workspace,
-  WorkspaceConfiguration,
-} from "vscode";
-import { findRuntimes, getRuntime, IJavaRuntime } from "jdk-utils";
-import {
-  accessSync,
-  copyFileSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "fs";
+import { commands, debug, ExtensionContext, QuickPickItem, window, workspace, WorkspaceConfiguration } from 'vscode';
+import { findRuntimes, getRuntime, IJavaRuntime } from 'jdk-utils';
+import { accessSync, copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 
-import AdmZip from "adm-zip";
-import { join, parse, resolve } from "path";
-import JetbrainsRuntimeUtil from "./jetbrainsUtil";
-import { resolveVaadinHomeDirectory } from "./projectFilesHelpers";
+import AdmZip from 'adm-zip';
+import { join, parse, resolve } from 'path';
+import JetbrainsRuntimeUtil from './jetbrainsUtil';
+import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
 
-const JAVA_DEBUG_HOTCODE_REPLACE = "debug.settings.hotCodeReplace";
-const HOTSWAPAGENT_JAR = "hotswap-agent.jar";
-const LAUNCH_CONFIGURATION_NAME = "Debug using Hotswap Agent";
+const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
+const HOTSWAPAGENT_JAR = 'hotswap-agent.jar';
+const LAUNCH_CONFIGURATION_NAME = 'Debug using Hotswap Agent';
 
 class JavaRuntimeQuickPickItem implements QuickPickItem {
   constructor(item: IJavaRuntime | undefined) {
     this.item = item;
-    this.label = item?.version?.java_version || "unknown";
+    this.label = item?.version?.java_version || 'unknown';
     if (item?.homedir) {
       this.description = item?.homedir;
       const ver = getImplementationVersion(item.homedir);
       if (ver) {
-        this.detail = "hotswap-agent.jar detected: " + ver;
+        this.detail = 'hotswap-agent.jar detected: ' + ver;
       }
     }
 
     if (!item) {
-      this.label =
-        "Download from https://github.com/JetBrains/JetBrainsRuntime";
+      this.label = 'Download from https://github.com/JetBrains/JetBrainsRuntime';
     }
   }
 
@@ -59,7 +43,7 @@ export async function setupHotswap(context: ExtensionContext) {
     return;
   }
 
-  getJavaConfiguration().update(JAVA_DEBUG_HOTCODE_REPLACE, "auto");
+  getJavaConfiguration().update(JAVA_DEBUG_HOTCODE_REPLACE, 'auto');
 
   if (!(await installHotswapJar(context, javaHome))) {
     showCancellationWarning();
@@ -71,55 +55,42 @@ export async function setupHotswap(context: ExtensionContext) {
     return;
   }
 
-  window
-    .showInformationMessage(
-      "hotswap-agent.jar installed",
-      LAUNCH_CONFIGURATION_NAME,
-    )
-    .then((action) => {
-      if (action) {
-        commands.executeCommand("vaadin.debugUsingHotswap");
-      }
-    });
+  window.showInformationMessage('hotswap-agent.jar installed', LAUNCH_CONFIGURATION_NAME).then((action) => {
+    if (action) {
+      commands.executeCommand('vaadin.debugUsingHotswap');
+    }
+  });
 }
 
 export async function debugUsingHotswap(context: ExtensionContext) {
   if (!workspace.workspaceFolders) {
-    window.showErrorMessage("No workspace is open.");
+    window.showErrorMessage('No workspace is open.');
     return;
   }
 
   const workspaceFolder = workspace.workspaceFolders[0];
 
-  const launchConfiguration = workspace.getConfiguration("launch");
-  const configurations = launchConfiguration.get<any[]>("configurations");
+  const launchConfiguration = workspace.getConfiguration('launch');
+  const configurations = launchConfiguration.get<any[]>('configurations');
   if (!configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME)) {
     // configuration does not exist
     window
-      .showWarningMessage(
-        "Hotswap not configured, please run Setup Hotswap Agent first.",
-        "Run Setup Hotswap Agent",
-      )
+      .showWarningMessage('Hotswap not configured, please run Setup Hotswap Agent first.', 'Run Setup Hotswap Agent')
       .then((action) => {
         if (action) {
-          commands.executeCommand("vaadin.setupHotswap");
+          commands.executeCommand('vaadin.setupHotswap');
         }
       });
     return;
   }
 
   try {
-    const success = await debug.startDebugging(
-      workspaceFolder,
-      LAUNCH_CONFIGURATION_NAME,
-    );
+    const success = await debug.startDebugging(workspaceFolder, LAUNCH_CONFIGURATION_NAME);
     if (!success) {
       window.showErrorMessage(`Failed to launch: ${LAUNCH_CONFIGURATION_NAME}`);
     }
   } catch (error) {
-    window.showErrorMessage(
-      `Failed to launch: ${LAUNCH_CONFIGURATION_NAME}: ${error}`,
-    );
+    window.showErrorMessage(`Failed to launch: ${LAUNCH_CONFIGURATION_NAME}: ${error}`);
   }
 }
 
@@ -133,8 +104,7 @@ async function setupJavaHome(): Promise<string | undefined> {
   const items = runtimes.map((r) => new JavaRuntimeQuickPickItem(r));
   items.unshift(new JavaRuntimeQuickPickItem(undefined));
   const selected = await window.showQuickPick(items, {
-    placeHolder:
-      "Choose existing JetBrains Runtime or download latest version.",
+    placeHolder: 'Choose existing JetBrains Runtime or download latest version.',
   });
 
   if (!selected) {
@@ -158,11 +128,11 @@ async function findJetBrainsRuntimes(): Promise<IJavaRuntime[]> {
   runtimes = runtimes.concat(await findRuntimes({ withVersion: true }));
   return runtimes.filter((r) => {
     try {
-      const releaseFile = join(r.homedir, "release");
+      const releaseFile = join(r.homedir, 'release');
       accessSync(releaseFile);
       const content = readFileSync(releaseFile).toString();
       const match = content.match(/IMPLEMENTOR="([^"]+)"/);
-      return match ? match[1].includes("JetBrains") : false;
+      return match ? match[1].includes('JetBrains') : false;
     } catch {}
     return false;
   });
@@ -173,13 +143,11 @@ async function findJetBrainsRuntimes(): Promise<IJavaRuntime[]> {
  * @returns IJavaRuntime array of .vaadin/jdk runtimes
  */
 async function findDotVaadinRuntimes(): Promise<IJavaRuntime[]> {
-  const vaadinJdkPath = join(resolveVaadinHomeDirectory(), "jdk");
+  const vaadinJdkPath = join(resolveVaadinHomeDirectory(), 'jdk');
   const jdks = [];
   try {
     accessSync(vaadinJdkPath);
-    const vaadinJdks = readdirSync(vaadinJdkPath).map((dir) =>
-      getJavaHome(join(vaadinJdkPath, dir)),
-    );
+    const vaadinJdks = readdirSync(vaadinJdkPath).map((dir) => getJavaHome(join(vaadinJdkPath, dir)));
     for (const i in vaadinJdks) {
       const jdk = await getRuntime(vaadinJdks[i], { withVersion: true });
       if (jdk) {
@@ -197,20 +165,18 @@ async function findDotVaadinRuntimes(): Promise<IJavaRuntime[]> {
  */
 function getImplementationVersion(homedir: string): string | undefined {
   try {
-    const jarPath = resolve(homedir, "lib", "hotswap", HOTSWAPAGENT_JAR);
+    const jarPath = resolve(homedir, 'lib', 'hotswap', HOTSWAPAGENT_JAR);
     accessSync(jarPath);
 
     const zip = new AdmZip(jarPath);
-    const manifestEntry = zip.getEntry("META-INF/MANIFEST.MF");
+    const manifestEntry = zip.getEntry('META-INF/MANIFEST.MF');
     if (!manifestEntry) {
-      console.log("META-INF/MANIFEST.MF not found in the JAR file.");
+      console.log('META-INF/MANIFEST.MF not found in the JAR file.');
       return undefined;
     }
 
-    const manifestContent = manifestEntry.getData().toString("utf-8");
-    const versionMatch = manifestContent.match(
-      /^Implementation-Version:\s*(.+)$/m,
-    );
+    const manifestContent = manifestEntry.getData().toString('utf-8');
+    const versionMatch = manifestContent.match(/^Implementation-Version:\s*(.+)$/m);
 
     return versionMatch ? versionMatch[1].trim() : undefined;
   } catch {
@@ -224,11 +190,8 @@ function getImplementationVersion(homedir: string): string | undefined {
  * @param javaHome java home
  * @returns true on success
  */
-async function installHotswapJar(
-  context: ExtensionContext,
-  javaHome: string,
-): Promise<boolean> {
-  const hotswapDir = join(javaHome, "lib", "hotswap");
+async function installHotswapJar(context: ExtensionContext, javaHome: string): Promise<boolean> {
+  const hotswapDir = join(javaHome, 'lib', 'hotswap');
   const jarPath = join(hotswapDir, HOTSWAPAGENT_JAR);
 
   try {
@@ -236,23 +199,19 @@ async function installHotswapJar(
   } catch {
     // create if not exists
     if (!mkdirSync(hotswapDir, { recursive: true })) {
-      handleFailure("Cannot create " + hotswapDir);
+      handleFailure('Cannot create ' + hotswapDir);
       return false;
     }
   }
 
-  const hotswapAgentJar = join(
-    context.extensionPath,
-    "resources",
-    HOTSWAPAGENT_JAR,
-  );
+  const hotswapAgentJar = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
   try {
     copyFileSync(hotswapAgentJar, jarPath);
   } catch (err: any) {
     handleFailure(err);
     return false;
   }
-  console.log("hotswap-agent.jar installed into " + jarPath);
+  console.log('hotswap-agent.jar installed into ' + jarPath);
 
   return true;
 }
@@ -263,91 +222,84 @@ async function installHotswapJar(
  */
 async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
   if (!workspace.workspaceFolders) {
-    window.showErrorMessage("No workspace is open.");
+    window.showErrorMessage('No workspace is open.');
     return false;
   }
 
   const workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
-  const vscodeFolder = join(workspaceFolder, ".vscode");
-  const launchJsonPath = join(vscodeFolder, "launch.json");
+  const vscodeFolder = join(workspaceFolder, '.vscode');
+  const launchJsonPath = join(vscodeFolder, 'launch.json');
 
   try {
     accessSync(launchJsonPath);
   } catch {
     // launch.json not exists, create
-    const launchConfig: any = { version: "0.2.0", configurations: [] };
+    const launchConfig: any = { version: '0.2.0', configurations: [] };
     writeFileSync(launchJsonPath, JSON.stringify(launchConfig, null, 4));
   }
 
   const mainClass = await findSpringBootApplicationMainClass();
 
-  const launchConfiguration = workspace.getConfiguration("launch");
-  const configurations = launchConfiguration.get<any[]>("configurations");
+  const launchConfiguration = workspace.getConfiguration('launch');
+  const configurations = launchConfiguration.get<any[]>('configurations');
 
-  let configEntry = configurations?.find(
-    (c) => c.name === LAUNCH_CONFIGURATION_NAME,
-  );
+  let configEntry = configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME);
   if (configEntry) {
     configEntry.javaExec = getJavaExecutable(javaHome);
     configEntry.mainClass = mainClass;
   } else {
     configEntry = {
-      type: "java",
+      type: 'java',
       name: LAUNCH_CONFIGURATION_NAME,
-      request: "launch",
+      request: 'launch',
       javaExec: getJavaExecutable(javaHome),
       mainClass: mainClass,
-      vmArgs:
-        "-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar",
+      vmArgs: '-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar',
     };
     configurations?.unshift(configEntry);
   }
 
-  await launchConfiguration.update("configurations", configurations);
+  await launchConfiguration.update('configurations', configurations);
 
   return true;
 }
 
 function getJavaConfiguration(): WorkspaceConfiguration {
-  return workspace.getConfiguration("java");
+  return workspace.getConfiguration('java');
 }
 
 function showCancellationWarning() {
-  window.showWarningMessage("Hotswap Agent setup cancelled");
+  window.showWarningMessage('Hotswap Agent setup cancelled');
 }
 
 function handleFailure(err: Error | string) {
   console.error(err);
-  window.showErrorMessage(
-    "hotswap-agent.jar installation failed, check logs for details",
-  );
+  window.showErrorMessage('hotswap-agent.jar installation failed, check logs for details');
 }
 
 function getJavaHome(jdkHome: string): string {
-  if (process.platform === "darwin") {
-    return join(jdkHome, "Contents", "Home");
+  if (process.platform === 'darwin') {
+    return join(jdkHome, 'Contents', 'Home');
   }
 
   return jdkHome;
 }
 
 function getJavaExecutable(javaHome: string) {
-  const bin = process.platform === "win32" ? "java.exe" : "java";
-  return join(javaHome, "bin", bin);
+  const bin = process.platform === 'win32' ? 'java.exe' : 'java';
+  return join(javaHome, 'bin', bin);
 }
 
-async function findSpringBootApplicationMainClass(): Promise<
-  string | undefined
-> {
-  const files = await workspace.findFiles("**/*.java", "**/target/**");
+async function findSpringBootApplicationMainClass(): Promise<string | undefined> {
+  const files = await workspace.findFiles('**/*.java', '**/target/**');
   for (const file of files) {
     try {
       const document = await workspace.openTextDocument(file);
       const content = document.getText();
-      if (content.includes("@SpringBootApplication")) {
+      if (content.includes('@SpringBootApplication')) {
         const className = parse(file.fsPath).name;
         const match = content.match(/package\s+([a-zA-Z0-9_.]+);/);
-        return match ? match[1] + "." + className : className;
+        return match ? match[1] + '.' + className : className;
       }
     } catch (error) {
       console.error(`Error reading file: ${file.fsPath}`, error);

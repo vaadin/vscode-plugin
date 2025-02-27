@@ -1,17 +1,17 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
-import { Uri } from "vscode";
-import * as fs from "fs";
-import { isFileInsideProject } from "./projectFilesHelpers";
-import { undoManager } from "./undoManager";
+import { Uri } from 'vscode';
+import * as fs from 'fs';
+import { isFileInsideProject } from './projectFilesHelpers';
+import { undoManager } from './undoManager';
 
 export enum Handlers {
-  WRITE = "write",
-  WRITE_BASE64 = "writeBase64",
-  UNDO = "undo",
-  REDO = "redo",
+  WRITE = 'write',
+  WRITE_BASE64 = 'writeBase64',
+  UNDO = 'undo',
+  REDO = 'redo',
   // SHOW_IN_IDE = "showInIde",
-  REFRESH = "refresh",
+  REFRESH = 'refresh',
 }
 
 export type CommandRequest = {
@@ -50,22 +50,17 @@ export async function writeFileHandler(data: WriteCommandData) {
     if (fs.existsSync(data.file)) {
       const currentContent = fs.readFileSync(data.file);
       if (currentContent.equals(content)) {
-        console.log("File " + uri + " unchanged, not saving");
+        console.log('File ' + uri + ' unchanged, not saving');
         return;
       }
       vscode.window.visibleTextEditors;
-      const entireRange = new vscode.Range(
-        0,
-        0,
-        Number.MAX_SAFE_INTEGER,
-        Number.MAX_SAFE_INTEGER,
-      );
+      const entireRange = new vscode.Range(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
       workspaceEdit.replace(uri, entireRange, data.content, metadata);
-      console.log("Replacing content of " + uri);
+      console.log('Replacing content of ' + uri);
     } else {
       // cannot use createFile all the time as it creates "remove file" undo operation
       workspaceEdit.createFile(uri, { contents: content }, metadata);
-      console.log("Saving content in " + uri);
+      console.log('Saving content in ' + uri);
     }
 
     // perform operation
@@ -83,21 +78,18 @@ export async function writeFileHandler(data: WriteCommandData) {
       vscode.window.showTextDocument(doc);
     });
   } else {
-    console.warn("File " + data.file + " is not a part of a project");
+    console.warn('File ' + data.file + ' is not a part of a project');
   }
 }
 
 export async function writeBase64FileHandler(data: WriteCommandData) {
   if (isFileInsideProject(data.file)) {
-    let buff = Buffer.from(data.content, "base64");
+    let buff = Buffer.from(data.content, 'base64');
     fs.writeFileSync(data.file, buff);
   }
 }
 
-export async function undoRedoHandler(
-  data: UndoRedoCommandData,
-  operation: "undo" | "redo",
-) {
+export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'undo' | 'redo') {
   const activeDocument = vscode.window.activeTextEditor?.document;
 
   for (var i in data.files) {
@@ -122,7 +114,7 @@ export async function undoRedoHandler(
         });
       });
     } else {
-      console.warn("File " + file + " is not a part of a project");
+      console.warn('File ' + file + ' is not a part of a project');
     }
   }
 
@@ -134,29 +126,20 @@ export async function undoRedoHandler(
 // not used temporarily as it does not bring Window to front
 export async function showInIdeHandler(data: ShowInIdeCommandData) {
   if (isFileInsideProject(data.file)) {
-    const document = await vscode.workspace.openTextDocument(
-      Uri.file(data.file),
-    );
+    const document = await vscode.workspace.openTextDocument(Uri.file(data.file));
     const editor = await vscode.window.showTextDocument(document, {
       preview: false,
     });
     const position = new vscode.Position(data.line, data.column);
     editor.selection = new vscode.Selection(position, position);
-    const range = new vscode.Range(
-      data.line,
-      data.column,
-      data.line,
-      data.column,
-    );
+    const range = new vscode.Range(data.line, data.column, data.line, data.column);
     editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-    console.log(
-      "Opening document " + data.file + " at " + data.line + ":" + data.column,
-    );
+    console.log('Opening document ' + data.file + ' at ' + data.line + ':' + data.column);
   } else {
-    console.warn("File " + data.file + " is not a part of a project");
+    console.warn('File ' + data.file + ' is not a part of a project');
   }
 }
 
 export async function refresh() {
-  vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
+  vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 }
