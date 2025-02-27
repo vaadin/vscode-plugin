@@ -32,8 +32,8 @@ export function readProjectFile(...parts: string[]): string | undefined {
 export function isFileInsideProject(file: string): boolean {
   const projectRoot = getProjectFilePath()!;
   if (fs.existsSync(file)) {
-    const resolvedFile = path.resolve(file).toLocaleLowerCase("en");
-    return resolvedFile.startsWith(projectRoot.toLocaleLowerCase("en"));
+    const resolvedFile = path.resolve(file).toLocaleLowerCase('en');
+    return resolvedFile.startsWith(projectRoot.toLocaleLowerCase('en'));
   } else {
     return isFileInsideProject(path.dirname(file));
   }
@@ -41,10 +41,10 @@ export function isFileInsideProject(file: string): boolean {
 
 export async function downloadAndExtract(model: ProjectModel) {
   const url = getDownloadUrl(model);
-  console.log("Downloading Vaadin project from " + url);
+  console.log('Downloading Vaadin project from ' + url);
 
-  const response = await axios.get(url, { responseType: "arraybuffer" });
-  const zipBuffer = Buffer.from(response.data, "binary");
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  const zipBuffer = Buffer.from(response.data, 'binary');
 
   const generatedProjectPath = path.join(model.location, model.artifactId);
   const projectPath = path.join(model.location, model.name);
@@ -55,22 +55,21 @@ export async function downloadAndExtract(model: ProjectModel) {
   // use project name from user input for project location
   fs.renameSync(generatedProjectPath, projectPath);
 
-  console.log("Vaadin project created at " + projectPath);
+  console.log('Vaadin project created at ' + projectPath);
 
   // Open the newly created project folder in a new VS Code window
   const uri = vscode.Uri.file(projectPath);
-  vscode.commands.executeCommand("vscode.openFolder", uri, true);
-
+  vscode.commands.executeCommand('vscode.openFolder', uri, true);
 }
 
 function getDownloadUrl(model: ProjectModel) {
   let preset;
   if (model.exampleViews.indexOf('Flow') !== -1) {
-    preset = "default";
+    preset = 'default';
   } else if (model.exampleViews.indexOf('Hilla') !== -1) {
-    preset = "react";
+    preset = 'react';
   } else {
-    preset = "empty";
+    preset = 'empty';
   }
 
   if (model.authentication) {
@@ -81,7 +80,6 @@ function getDownloadUrl(model: ProjectModel) {
   }
 
   return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`;
-
 }
 
 /**
@@ -90,20 +88,19 @@ function getDownloadUrl(model: ProjectModel) {
  * @returns The path to the `.vaadin` directory.
  */
 export function resolveVaadinHomeDirectory(): string {
-    const userHome = process.env.HOME || process.env.USERPROFILE; // Cross-platform user home directory
-    if (!userHome) {
-        throw new Error("Unable to determine user home directory.");
-    }
+  const userHome = process.env.HOME || process.env.USERPROFILE; // Cross-platform user home directory
+  if (!userHome) {
+    throw new Error('Unable to determine user home directory.');
+  }
 
-    const vaadinHome = path.join(userHome, '.vaadin');
+  const vaadinHome = path.join(userHome, '.vaadin');
 
-    // Ensure the directory exists
-    try {
-      fs.accessSync(vaadinHome);
-    } catch {
-      fs.mkdirSync(vaadinHome);
-    }
-    
+  // Ensure the directory exists
+  try {
+    fs.accessSync(vaadinHome);
+  } catch {
+    fs.mkdirSync(vaadinHome);
+  }
 
-    return vaadinHome;
+  return vaadinHome;
 }
