@@ -1,12 +1,13 @@
 'use strict';
 
 import { commands, debug, ExtensionContext, QuickPickItem, window, workspace, WorkspaceConfiguration } from 'vscode';
-import { findRuntimes, IJavaRuntime } from 'jdk-utils';
-import { accessSync, copyFileSync, mkdirSync, writeFileSync } from 'fs';
+import { findRuntimes, getRuntime, IJavaRuntime } from 'jdk-utils';
+import {  accessSync, copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 
 import AdmZip from 'adm-zip';
 import { join, parse, resolve } from 'path';
 import JetbrainsRuntimeUtil from './jetbrainsUtil';
+import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
 const HOTSWAPAGENT_JAR = 'hotswap-agent.jar'
@@ -99,7 +100,7 @@ export async function debugUsingHotswap(context: ExtensionContext) {
  * @returns java home if selected
  */
 async function setupJavaHome(): Promise<string | undefined> {   
-    const runtimes = await findRuntimes({ withVersion: true });
+    const runtimes = await findJetBrainsRuntimes();
     const items = runtimes.map(r => new JavaRuntimeQuickPickItem(r));
     items.unshift(new JavaRuntimeQuickPickItem(undefined));
     const selected = await window.showQuickPick(items, {
@@ -115,8 +116,49 @@ async function setupJavaHome(): Promise<string | undefined> {
         return downloadedJdk ? getJavaHome(downloadedJdk) : undefined;
     }
 
-    const selectedJdk = selected?.item?.homedir;
-    return selectedJdk ? getJavaHome(selectedJdk) : undefined;
+    return selected.item.homedir;
+}
+
+/**
+ * Finds existing Java runtimes and filters JetBrains
+ * @returns IJavaRuntime array of JetBrains Runtimes only
+ */
+async function findJetBrainsRuntimes(): Promise<IJavaRuntime[]> {
+    let runtimes = await findDotVaadinRuntimes();
+    runtimes = runtimes.concat(await findRuntimes({ withVersion: true }));
+    return runtimes
+        .filter(r => {
+        try {
+            const releaseFile = join(r.homedir, 'release');
+            accessSync(releaseFile);
+            const content = readFileSync(releaseFile).toString();
+            const match = content.match(/IMPLEMENTOR="([^"]+)"/);
+            return match ? match[1].includes('JetBrains') : false
+        } catch {
+        }
+        return false
+    });
+}
+
+/**
+ * Finds .vaadin/jdk installed runtimes
+ * @returns IJavaRuntime array of .vaadin/jdk runtimes
+ */
+async function findDotVaadinRuntimes(): Promise<IJavaRuntime[]> {
+    const vaadinJdkPath = join(resolveVaadinHomeDirectory(), 'jdk');
+    const jdks = [];
+    try {
+        accessSync(vaadinJdkPath);
+        const vaadinJdks = readdirSync(vaadinJdkPath).map(dir => getJavaHome(join(vaadinJdkPath, dir)));
+        for (const i in vaadinJdks) {
+            const jdk = await getRuntime(vaadinJdks[i], { withVersion: true });
+            if (jdk) {
+                jdks.push(jdk);
+            }
+        }
+    } catch {
+    }
+    return jdks;
 }
 
 /**
