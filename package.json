@@ -78,6 +78,7 @@
     "express": "^4.21.1",
     "jdk-utils": "^0.5.1",
     "js-convert-case": "^4.2.0",
+    "lodash": "^4.17.21",
     "properties-file": "^3.5.3",
     "tar": "^7.4.3"
   },
