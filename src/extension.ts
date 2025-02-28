@@ -6,8 +6,9 @@ import { undoManager } from './helpers/undoManager';
 import { deleteProperties } from './helpers/properties';
 import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 import { DebugCodeLensProvider } from './debug-using-hotswapagent';
+import { JAVA_DEBUG_CONFIGURATION, JAVA_LANGID } from './helpers/javaUtil';
 
-
+const ENABLE_CODE_LENS_VARIABLE = 'enableRunDebugCodeLens';
 
 export async function activate(context: vscode.ExtensionContext) {
   let startServerCommand = vscode.commands.registerCommand('vaadin.start', function () {
@@ -16,12 +17,18 @@ export async function activate(context: vscode.ExtensionContext) {
   let newProjectCommand = vscode.commands.registerCommand('vaadin.newProject', function () {
     createNewProject();
   });
-  let setupHotswapCommand = vscode.commands.registerCommand('vaadin.setupHotswap', function () {
-    setupHotswap(context);
-  });
-  let debugUsingHotswapCommand = vscode.commands.registerCommand('vaadin.debugUsingHotswap', function () {
-    debugUsingHotswap(context);
-  });
+  let setupHotswapCommand = vscode.commands.registerCommand(
+    'vaadin.setupHotswap',
+    function (noPrompt: boolean | undefined) {
+      setupHotswap(context, noPrompt);
+    },
+  );
+  let debugUsingHotswapCommand = vscode.commands.registerCommand(
+    'vaadin.debugUsingHotswap',
+    function (autoSetup: boolean = false) {
+      debugUsingHotswap(context, autoSetup);
+    },
+  );
 
   // disposables
   context.subscriptions.push(statusBarItem);
@@ -30,20 +37,12 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(setupHotswapCommand);
   context.subscriptions.push(debugUsingHotswapCommand);
 
-  const JAVA_DEBUG_CONFIGURATION = 'java.debug.settings';
-  const ENABLE_CODE_LENS_VARIABLE = 'enableRunDebugCodeLens';
-  const JAVA_LANGID: string = 'java';
-
   const configuration = vscode.workspace.getConfiguration(JAVA_DEBUG_CONFIGURATION);
   const isCodeLensEnabled = configuration.get<boolean>(ENABLE_CODE_LENS_VARIABLE);
 
-  console.log('isCodeLensEnabled', isCodeLensEnabled);
-
   if (isCodeLensEnabled) {
     const lensProvider = vscode.languages.registerCodeLensProvider(JAVA_LANGID, new DebugCodeLensProvider());
-    console.log("DebugCodeLensProvider",lensProvider);
-  } else {
-    //    this.hoverProvider = initializeHoverProvider();
+    context.subscriptions.push(lensProvider);
   }
 
   if (isVaadinProject()) {

@@ -36,8 +36,8 @@ class JavaRuntimeQuickPickItem implements QuickPickItem {
   detail?: string | undefined;
 }
 
-export async function setupHotswap(context: ExtensionContext) {
-  const javaHome = await setupJavaHome();
+export async function setupHotswap(context: ExtensionContext, quiet: boolean = false) {
+  const javaHome = await setupJavaHome(quiet);
   if (!javaHome) {
     showCancellationWarning();
     return;
@@ -55,6 +55,11 @@ export async function setupHotswap(context: ExtensionContext) {
     return;
   }
 
+  if (quiet) {
+    window.showInformationMessage('hotswap-agent.jar setup finished');
+    return;
+  }
+
   window.showInformationMessage('hotswap-agent.jar installed', LAUNCH_CONFIGURATION_NAME).then((action) => {
     if (action) {
       commands.executeCommand('vaadin.debugUsingHotswap');
@@ -62,7 +67,7 @@ export async function setupHotswap(context: ExtensionContext) {
   });
 }
 
-export async function debugUsingHotswap(context: ExtensionContext) {
+export async function debugUsingHotswap(context: ExtensionContext, autoSetup: boolean = false) {
   if (!workspace.workspaceFolders) {
     window.showErrorMessage('No workspace is open.');
     return;
@@ -74,14 +79,19 @@ export async function debugUsingHotswap(context: ExtensionContext) {
   const configurations = launchConfiguration.get<any[]>('configurations');
   if (!configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME)) {
     // configuration does not exist
-    window
-      .showWarningMessage('Hotswap not configured, please run Setup Hotswap Agent first.', 'Run Setup Hotswap Agent')
-      .then((action) => {
-        if (action) {
-          commands.executeCommand('vaadin.setupHotswap');
-        }
-      });
-    return;
+
+    if (autoSetup) {
+      await setupHotswap(context, true);
+    } else {
+      window
+        .showWarningMessage('Hotswap not configured, please run Setup Hotswap Agent first.', 'Run Setup Hotswap Agent')
+        .then((action) => {
+          if (action) {
+            commands.executeCommand('vaadin.setupHotswap');
+          }
+        });
+      return;
+    }
   }
 
   try {
@@ -99,7 +109,12 @@ export async function debugUsingHotswap(context: ExtensionContext) {
  * Download link is present on top of the list.
  * @returns java home if selected
  */
-async function setupJavaHome(): Promise<string | undefined> {
+async function setupJavaHome(quiet: boolean): Promise<string | undefined> {
+  if (quiet) {
+    const downloadedJdk = await JetbrainsRuntimeUtil.downloadLatestJBR(quiet);
+    return downloadedJdk ? getJavaHome(downloadedJdk) : undefined;
+  }
+
   const runtimes = await findJetBrainsRuntimes();
   const items = runtimes.map((r) => new JavaRuntimeQuickPickItem(r));
   items.unshift(new JavaRuntimeQuickPickItem(undefined));

@@ -31,7 +31,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "prettier": "npx prettier --write src"
   },
   "capabilities": {
     "virtualWorkspaces": false,
@@ -78,7 +79,6 @@
     "express": "^4.21.1",
     "jdk-utils": "^0.5.1",
     "js-convert-case": "^4.2.0",
-    "lodash": "^4.17.21",
     "properties-file": "^3.5.3",
     "tar": "^7.4.3"
   },

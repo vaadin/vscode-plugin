@@ -84,7 +84,7 @@ class JetbrainsRuntimeUtil {
   /**
    * Downloads the latest JBR version and saves it to the workspace.
    */
-  public static async downloadLatestJBR(): Promise<string | undefined> {
+  public static async downloadLatestJBR(quiet: boolean = false): Promise<string | undefined> {
     return vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -112,14 +112,18 @@ class JetbrainsRuntimeUtil {
           }
 
           if (fs.existsSync(extractPath)) {
-            vscode.window.showInformationMessage(`JetBrains Runtime already exists at ${extractPath}`);
+            if (!quiet) {
+              vscode.window.showInformationMessage(`JetBrains Runtime already exists at ${extractPath}`);
+            }
             return extractPath;
           }
 
           await JetbrainsRuntimeUtil.downloadFile(downloadUrl, downloadPath, progress, token);
           await JetbrainsRuntimeUtil.extractArchive(downloadPath, extractPath);
 
-          vscode.window.showInformationMessage(`JetBrains Runtime downloaded to ${extractPath}`);
+          if (!quiet) {
+            vscode.window.showInformationMessage(`JetBrains Runtime downloaded to ${extractPath}`);
+          }
 
           return extractPath;
         } catch (error) {
