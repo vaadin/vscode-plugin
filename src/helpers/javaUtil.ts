@@ -34,10 +34,10 @@ export function executeJavaLanguageServerCommand(...rest: any[]) {
 }
 
 export async function executeJavaExtensionCommand(commandName: string, ...rest: any[]) {
-  // TODO: need to handle error and trace telemetry
   const javaExtension = getJavaExtension();
   if (!javaExtension) {
-    throw new Error(`Cannot execute command ${commandName}, VS Code Java Extension is not enabled.`);
+    console.warn(`Cannot execute command ${commandName}, VS Code Redhat Java Extension is not enabled.`);
+    return;
   }
   if (!javaExtension?.isActive) {
     await javaExtension.activate();

@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   let debugUsingHotswapCommand = vscode.commands.registerCommand(
     'vaadin.debugUsingHotswap',
-    function (autoSetup: boolean = false) {
+    function (autoSetup: boolean | undefined) {
       debugUsingHotswap(context, autoSetup);
     },
   );
