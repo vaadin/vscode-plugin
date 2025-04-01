@@ -63,23 +63,16 @@ export async function downloadAndExtract(model: ProjectModel) {
 }
 
 function getDownloadUrl(model: ProjectModel) {
-  let preset;
-  if (model.exampleViews.indexOf('Flow') !== -1) {
-    preset = 'default';
-  } else if (model.exampleViews.indexOf('Hilla') !== -1) {
-    preset = 'react';
-  } else {
-    preset = 'empty';
-  }
+  let frameworks = model.frameworks === '' ? 'empty' : model.frameworks;
+  let platformVersion = model.version === 'Stable' ? 'stable' : 'pre';
 
-  if (model.authentication) {
-    preset += '&preset=partial-auth';
-  }
-  if (model.version === 'Prerelease') {
-    preset += '&preset=partial-prerelease';
-  }
+  let params = new URLSearchParams({
+    frameworks,
+    platformVersion,
+    artifactId: model.artifactId
+  }).toString();
 
-  return `https://start.vaadin.com/dl?preset=${preset}&projectName=${model.artifactId}`;
+  return `https://start.vaadin.com/skeleton?${params}`;
 }
 
 /**
