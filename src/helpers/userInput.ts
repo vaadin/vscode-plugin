@@ -28,14 +28,14 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   const exampleViews = await vscode.window.showQuickPick([
     { 
       id: 'flow',
-      label: 'Java with Vaadin Flow',
+      label: 'Java UI with Vaadin Flow',
     },
     {
       id: 'hilla',
-      label: 'Full-stack React with Vaadin Hilla',
+      label: 'React UI with Vaadin Hilla',
     }
     ], {
-    placeHolder: 'Include Vaadin views?',
+    placeHolder: 'Include Vaadin application skeleton?',
     canPickMany: true,
   });
   if (!exampleViews) {
@@ -44,7 +44,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 
   // Version
   const version = await vscode.window.showQuickPick(['Stable', 'Prerelease'], {
-    placeHolder: 'Select a Version',
+    placeHolder: 'Select Vaadin version',
   });
   if (!version) {
     return;
