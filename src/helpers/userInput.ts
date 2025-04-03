@@ -1,12 +1,10 @@
-import { toKebabCase } from 'js-convert-case';
 import * as vscode from 'vscode';
 
 export type ProjectModel = {
   name: string;
   artifactId: string;
   location: string;
-  exampleViews: string;
-  authentication: boolean;
+  frameworks: string;
   version: string;
 };
 
@@ -26,40 +24,27 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     return;
   }
 
-  // Artifact Id
-  const artifactId = await vscode.window.showInputBox({
-    prompt: 'Artifact Id, should be valid Java artifact identifier',
-    value: toKebabCase(name),
-    validateInput: (v) => {
-      if (!v.match(/^[0-9a-z\-\_]+$/)) {
-        return 'Artifact Id should contain a-z, 0-9, -, _ characters only.';
-      }
-    },
-  });
-  if (!artifactId) {
-    return;
-  }
-
   // Example views
-  const exampleViews = await vscode.window.showQuickPick(['Flow (Java)', 'Hilla (React)', 'None'], {
-    placeHolder: 'Include example views?',
+  const exampleViews = await vscode.window.showQuickPick([
+    { 
+      id: 'flow',
+      label: 'Java UI with Vaadin Flow',
+    },
+    {
+      id: 'hilla',
+      label: 'React UI with Vaadin Hilla',
+    }
+    ], {
+    placeHolder: 'Include Vaadin application skeleton?',
+    canPickMany: true,
   });
   if (!exampleViews) {
     return;
   }
 
-  // Authentication
-  const authentication =
-    (await vscode.window.showQuickPick(['Yes', 'No'], {
-      placeHolder: 'Use authentication?',
-    })) === 'Yes';
-  if (!authentication === undefined) {
-    return;
-  }
-
   // Version
   const version = await vscode.window.showQuickPick(['Stable', 'Prerelease'], {
-    placeHolder: 'Select a Version',
+    placeHolder: 'Select Vaadin version',
   });
   if (!version) {
     return;
@@ -80,10 +65,18 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 
   return {
     name: name.trim(),
-    artifactId,
+    artifactId: toArtifactId(name),
     location,
-    exampleViews,
-    authentication,
+    frameworks: exampleViews.map(item => item.id).join(','),
     version,
   };
+}
+
+function toArtifactId(name: string): string {
+  return name
+      .trim()
+      .replace(/([a-z])([A-Z])/g, '$1-$2') // camelCase to kebab-case
+      .replace(/[\s_]+/g, '-')             // spaces/underscores to hyphen
+      .replace(/[^a-zA-Z0-9-]/g, '')       // remove invalid chars
+      .toLowerCase();
 }
