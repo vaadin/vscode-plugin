@@ -7,6 +7,7 @@ import { deleteProperties } from './helpers/properties';
 import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 import { DebugCodeLensProvider } from './debug-using-hotswapagent';
 import { JAVA_DEBUG_CONFIGURATION, JAVA_LANGID } from './helpers/javaUtil';
+import { trackPluginInitialized } from './helpers/ampliUtil';
 
 const ENABLE_CODE_LENS_VARIABLE = 'enableRunDebugCodeLens';
 
@@ -48,6 +49,8 @@ export async function activate(context: vscode.ExtensionContext) {
   if (isVaadinProject()) {
     startServer();
   }
+
+  trackPluginInitialized();
 
   vscode.workspace.onDidSaveTextDocument((doc) => undoManager.documentSaveListener(doc));
 }

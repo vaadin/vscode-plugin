@@ -4,6 +4,7 @@ import * as path from 'path';
 import axios from 'axios';
 import { ProjectModel } from './userInput';
 import AdmZip from 'adm-zip';
+import { trackProjectCreated } from './ampliUtil';
 
 export function getProjectFilePath(...parts: string[]) {
   if (vscode.workspace.workspaceFolders) {
@@ -42,6 +43,8 @@ export function isFileInsideProject(file: string): boolean {
 export async function downloadAndExtract(model: ProjectModel) {
   const url = getDownloadUrl(model);
   console.log('Downloading Vaadin project from ' + url);
+
+  trackProjectCreated(url);
 
   const response = await axios.get(url, { responseType: 'arraybuffer' });
   const zipBuffer = Buffer.from(response.data, 'binary');

@@ -33,6 +33,6 @@ function createProperties(endpoint: string): PropertiesEditor {
   return editor;
 }
 
-function getPluginVersion(): string {
+export function getPluginVersion(): string {
   return vscode.extensions.getExtension('vaadin.vaadin-vscode')!.packageJSON.version;
 }
