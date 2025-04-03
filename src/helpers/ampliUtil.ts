@@ -12,9 +12,6 @@ import * as fs from 'fs';
 const eventOptions: EventOptions = {
   platform: vscode.env.appName,
   device_model: 'vscode',
-  language: Intl.DateTimeFormat().resolvedOptions().locale.split('-')[0],
-  country: Intl.DateTimeFormat().resolvedOptions().locale.split('-')[1],
-  region: Intl.DateTimeFormat().resolvedOptions().locale.split('-')[1],
   os_name: os.type(),
   os_version: os.release(),
   app_version: getPluginVersion(),
