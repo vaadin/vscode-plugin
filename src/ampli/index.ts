@@ -58,6 +58,10 @@ export type LoadOptionsWithClientInstance = LoadOptionsBase & { client: { instan
 
 export type LoadOptions = LoadOptionsWithEnvironment | LoadOptionsWithApiKey | LoadOptionsWithClientInstance;
 
+export interface DebugWithHotswapProperties {
+  Vaadiner: boolean;
+}
+
 export interface ManualCopilotRestartProperties {
   Vaadiner: boolean;
 }
@@ -75,6 +79,16 @@ export interface ProjectCreatedProperties {
    */
   downloadUrl?: string;
   Vaadiner: boolean;
+}
+
+export class DebugWithHotswap implements BaseEvent {
+  event_type = 'DebugWithHotswap';
+
+  constructor(
+    public event_properties: DebugWithHotswapProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
 }
 
 export class Identify implements BaseEvent {
@@ -218,6 +232,25 @@ export class Ampli {
     }
 
     return this.amplitude!.flush();
+  }
+
+  /**
+   * DebugWithHotswap
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/vaadin/IDE%20Plugins/events/main/latest/DebugWithHotswap)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param userId The user's ID.
+   * @param properties The event's properties (e.g. Vaadiner)
+   * @param options Amplitude event options.
+   */
+  debugWithHotswap(
+    userId: string | undefined,
+    properties: DebugWithHotswapProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(userId, new DebugWithHotswap(properties), options);
   }
 
   /**

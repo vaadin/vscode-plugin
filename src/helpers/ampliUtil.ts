@@ -33,6 +33,12 @@ export function trackProjectCreated(url: string) {
     }
 }
 
+export function trackDebugWithHotswap() {
+  if (isEnabled()) {
+      ampli.debugWithHotswap(getUserId(), { Vaadiner: isVaadiner()});
+  }
+}
+
 function getUserId() {
     if (userId === undefined) {
         userId = getUserKey();
