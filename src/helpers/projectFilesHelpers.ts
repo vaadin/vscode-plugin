@@ -72,7 +72,8 @@ function getDownloadUrl(model: ProjectModel) {
   let params = new URLSearchParams({
     frameworks,
     platformVersion,
-    artifactId: model.artifactId
+    artifactId: model.artifactId,
+    ref: 'vscode'
   }).toString();
 
   return `https://start.vaadin.com/skeleton?${params}`;
