@@ -8,6 +8,7 @@ import AdmZip from 'adm-zip';
 import { join, parse, resolve } from 'path';
 import JetbrainsRuntimeUtil from './jetbrainsUtil';
 import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
+import { trackDebugWithHotswap } from './ampliUtil';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
 const HOTSWAPAGENT_JAR = 'hotswap-agent.jar';
@@ -72,6 +73,8 @@ export async function debugUsingHotswap(context: ExtensionContext, autoSetup: bo
     window.showErrorMessage('No workspace is open.');
     return;
   }
+
+  trackDebugWithHotswap();
 
   const workspaceFolder = workspace.workspaceFolders[0];
 
