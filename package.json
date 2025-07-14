@@ -78,14 +78,14 @@
         {
           "command": "vaadin.debugUsingHotswap",
           "when": "resourceExtname == .java",
-          "group": "navigation@1"
+          "group": "debug@2"
         }
       ],
       "editor/context": [
         {
           "command": "vaadin.debugUsingHotswap",
           "when": "resourceExtname == .java",
-          "group": "navigation@1"
+          "group": "debug@2"
         }
       ]
     },

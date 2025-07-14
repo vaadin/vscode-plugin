@@ -27,11 +27,13 @@ suite('Menu Configuration Test Suite', () => {
     const explorerMenu = menus['explorer/context'][0];
     assert.equal(explorerMenu.command, 'vaadin.debugUsingHotswap', 'Explorer menu should use correct command');
     assert.equal(explorerMenu.when, 'resourceExtname == .java', 'Explorer menu should show only for Java files');
+    assert.equal(explorerMenu.group, 'debug@2', 'Explorer menu should be in debug group');
     
     // Test editor context menu
     assert.ok(menus['editor/context'], 'Editor context menu should exist');
     const editorMenu = menus['editor/context'][0];
     assert.equal(editorMenu.command, 'vaadin.debugUsingHotswap', 'Editor menu should use correct command');
     assert.equal(editorMenu.when, 'resourceExtname == .java', 'Editor menu should show only for Java files');
+    assert.equal(editorMenu.group, 'debug@2', 'Editor menu should be in debug group');
   });
 });
