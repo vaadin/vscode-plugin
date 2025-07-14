@@ -73,6 +73,22 @@
         "category": "Vaadin"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "vaadin.debugUsingHotswap",
+          "when": "resourceExtname == .java",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "vaadin.debugUsingHotswap",
+          "when": "resourceExtname == .java",
+          "group": "navigation@1"
+        }
+      ]
+    },
     "icons": {
       "server-running": {
         "description": "Vaadin icon for running server",
