@@ -73,6 +73,7 @@ function getDownloadUrl(model: ProjectModel) {
     frameworks,
     platformVersion,
     artifactId: model.artifactId,
+    groupId: model.groupId,
     ref: 'vscode'
   }).toString();
 

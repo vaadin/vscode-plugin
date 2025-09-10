@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export type ProjectModel = {
   name: string;
   artifactId: string;
+  groupId: string;
   location: string;
   frameworks: string;
   version: string;
@@ -49,7 +50,19 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   if (!version) {
     return;
   }
-
+  // Group ID
+  const groupId = await vscode.window.showInputBox({
+      prompt: 'Group ID (Java package, e.g. com.example.application)',
+      value: 'com.example',
+      validateInput: (v) => {
+          if (!v.match(/^[a-zA-Z_][a-zA-Z0-9_.]*$/)) {
+              return 'Group ID must be a valid Java package name.';
+          }
+      },
+  });
+  if (!groupId) {
+      return;
+  }
   // Project location
   const locationUri = await vscode.window.showOpenDialog({
     canSelectFiles: false,
@@ -66,6 +79,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   return {
     name: name.trim(),
     artifactId: toArtifactId(name),
+    groupId: groupId.trim(),
     location,
     frameworks: exampleViews.map(item => item.id).join(','),
     version,
