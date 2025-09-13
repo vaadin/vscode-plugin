@@ -27,7 +27,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   // Group ID
   const groupId = await vscode.window.showInputBox({
       prompt: 'Group ID (Java package, e.g. com.example.application)',
-      value: 'com.example',
+      value: 'com.example.application',
       validateInput: (v) => {
           if (!v.match(/^(?!\.)(?!.*\.\.)(?=.*\.)([A-Za-z0-9_.]+)(?<!\.)$/)) {
               return 'Group ID must be a valid Java package name.';
