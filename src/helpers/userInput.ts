@@ -14,9 +14,9 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   // Project name
   const name = await vscode.window.showInputBox({
     prompt: 'Project Name',
-    value: 'New Project',
+    value: 'NewProject',
     validateInput: (v) => {
-      if (!v.match(/^[^\.].*[^\.]$/)) {
+      if (!v.match(/^[A-Za-z0-9_.-]+$/)) {
         return 'Project name must be valid directory name.';
       }
     },
@@ -24,7 +24,19 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   if (!name) {
     return;
   }
-
+  // Group ID
+  const groupId = await vscode.window.showInputBox({
+      prompt: 'Group ID (Java package, e.g. com.example.application)',
+      value: 'com.example',
+      validateInput: (v) => {
+          if (!v.match(/^(?!\.)(?!.*\.\.)(?=.*\.)([A-Za-z0-9_.]+)(?<!\.)$/)) {
+              return 'Group ID must be a valid Java package name.';
+          }
+      },
+  });
+  if (!groupId) {
+      return;
+  }
   // Example views
   const exampleViews = await vscode.window.showQuickPick([
     { 
@@ -50,19 +62,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   if (!version) {
     return;
   }
-  // Group ID
-  const groupId = await vscode.window.showInputBox({
-      prompt: 'Group ID (Java package, e.g. com.example.application)',
-      value: 'com.example',
-      validateInput: (v) => {
-          if (!v.match(/^[a-zA-Z_][a-zA-Z0-9_.]*$/)) {
-              return 'Group ID must be a valid Java package name.';
-          }
-      },
-  });
-  if (!groupId) {
-      return;
-  }
+
   // Project location
   const locationUri = await vscode.window.showOpenDialog({
     canSelectFiles: false,
