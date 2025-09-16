@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export type ProjectModel = {
   name: string;
   artifactId: string;
+  groupId: string;
   location: string;
   frameworks: string;
   version: string;
@@ -13,9 +14,9 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   // Project name
   const name = await vscode.window.showInputBox({
     prompt: 'Project Name',
-    value: 'New Project',
+    value: 'NewProject',
     validateInput: (v) => {
-      if (!v.match(/^[^\.].*[^\.]$/)) {
+      if (!v.match(/^[A-Za-z0-9_.-]+$/)) {
         return 'Project name must be valid directory name.';
       }
     },
@@ -23,7 +24,19 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   if (!name) {
     return;
   }
-
+  // Group ID
+  const groupId = await vscode.window.showInputBox({
+      prompt: 'Group ID (Java package, e.g. com.example.application)',
+      value: 'com.example.application',
+      validateInput: (v) => {
+          if (!v.match(/^(?!\.)(?!.*\.\.)(?=.*\.)([A-Za-z0-9_.]+)(?<!\.)$/)) {
+              return 'Group ID must be a valid Java package name.';
+          }
+      },
+  });
+  if (!groupId) {
+      return;
+  }
   // Example views
   const exampleViews = await vscode.window.showQuickPick([
     { 
@@ -66,6 +79,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   return {
     name: name.trim(),
     artifactId: toArtifactId(name),
+    groupId: groupId.trim(),
     location,
     frameworks: exampleViews.map(item => item.id).join(','),
     version,
