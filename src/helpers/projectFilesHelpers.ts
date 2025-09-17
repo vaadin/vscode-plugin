@@ -63,14 +63,10 @@ export async function downloadAndExtract(model: ProjectModel) {
     throw new Error('No project folder found in the downloaded zip');
   }
   const extractedRoot = path.join(tempExtractPath, extractedFolders[0]);
+
+
+  // Always use the provided model.name as the destination folder (already checked for conflicts)
   const projectPath = path.join(model.location, model.name);
-
-  // If the destination folder already exists, remove it first
-  if (fs.existsSync(projectPath)) {
-    fs.rmSync(projectPath, { recursive: true, force: true });
-  }
-
-  // Move the extracted folder to the expected destination name
   fs.renameSync(extractedRoot, projectPath);
 
   // Clean up temporary folder

@@ -69,7 +69,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
       { label: 'Full-stack React con Vaadin Hilla', value: 'hilla' },
     ], { placeHolder: 'Selecciona el tipo de starter' });
     if (!starterType) { return; }
-    // Carpeta al final
+    // Folder selection and name conflict logic
     const locationUri = await vscode.window.showOpenDialog({
       canSelectFiles: false,
       canSelectFolders: true,
@@ -79,10 +79,32 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     });
     const location = locationUri ? locationUri[0].fsPath : undefined;
     if (!location) { return; }
+    // Check for folder conflict and propose new name if needed
+    const fs = require('fs');
+    const path = require('path');
+    let baseName = name.trim();
+    let projectPath = path.join(location, baseName);
+    let counter = 1;
+    while (fs.existsSync(projectPath)) {
+      projectPath = path.join(location, `${baseName}-${counter}`);
+      counter++;
+    }
+    let finalName = baseName;
+    if (projectPath !== path.join(location, baseName)) {
+      finalName = path.basename(projectPath);
+      const answer = await vscode.window.showWarningMessage(
+        `The folder '${baseName}' already exists. The project will be created as '${finalName}'. Do you want to continue?`,
+        { modal: true },
+        'Yes'
+      );
+      if (answer !== 'Yes') {
+        return;
+      }
+    }
     return {
       workflow,
-      name: name.trim(),
-      artifactId: toArtifactId(name),
+      name: finalName,
+      artifactId: toArtifactId(finalName),
       groupId: groupId.trim(),
       location,
       vaadinVersion: vaadinVersion.value as 'stable' | 'pre',
@@ -116,7 +138,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
       { label: 'Servlet', value: 'servlet' },
     ], { placeHolder: 'Selecciona la arquitectura' });
     if (!architecture) { return; }
-    // Carpeta al final
+    // Folder selection and name conflict logic
     const locationUri = await vscode.window.showOpenDialog({
       canSelectFiles: false,
       canSelectFolders: true,
@@ -126,10 +148,33 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     });
     const location = locationUri ? locationUri[0].fsPath : undefined;
     if (!location) { return; }
+    // Check for folder conflict and propose new name if needed
+    const fs = require('fs');
+    const path = require('path');
+    let baseName = name.trim();
+    let projectPath = path.join(location, baseName);
+    let counter = 1;
+    while (fs.existsSync(projectPath)) {
+      projectPath = path.join(location, `${baseName}-${counter}`);
+      counter++;
+    }
+    let finalName = baseName;
+    if (projectPath !== path.join(location, baseName)) {
+      finalName = path.basename(projectPath);
+      const answer = await vscode.window.showWarningMessage(
+        `The folder '${baseName}' already exists. The project will be created as '${finalName}'. Do you want to continue?`,
+        { modal: true },
+        'Yes', 'No'
+      );
+      if (answer !== 'Yes') {
+        vscode.window.showInformationMessage('Project creation cancelled.');
+        return;
+      }
+    }
     return {
       workflow,
-      name: name.trim(),
-      artifactId: toArtifactId(name),
+      name: finalName,
+      artifactId: toArtifactId(finalName),
       groupId: groupId.trim(),
       location,
       framework: framework.value as 'flow' | 'hilla',
