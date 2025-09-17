@@ -74,9 +74,11 @@ export async function downloadAndExtract(model: ProjectModel) {
 
   console.log('Vaadin project created at ' + projectPath);
 
-  // Open the newly created project folder in a new VS Code window
-  const uri = vscode.Uri.file(projectPath);
-  vscode.commands.executeCommand('vscode.openFolder', uri, true);
+  // Open the newly created project folder in a new VS Code window, unless running in test mode
+  if (process.env.NODE_ENV !== 'test' && process.env.VSCODE_TEST !== 'true') {
+    const uri = vscode.Uri.file(projectPath);
+    vscode.commands.executeCommand('vscode.openFolder', uri, true);
+  }
 }
 
 function getDownloadUrl(model: ProjectModel) {
