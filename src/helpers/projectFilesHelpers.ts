@@ -13,23 +13,22 @@ export function getProjectFilePath(...parts: string[]) {
 }
 
 export function projectPathExists(...parts: string[]) {
-  // Check if the user has any folders open in their workspace
-  // If yes, take the first one since we are not supporting multiple workspace folders
+  // check if the user has any folders open in their workspace
+  // if yes, take the first one since we are not supporting multiple
+  // workspace folders
   if (vscode.workspace.workspaceFolders) {
     return fs.existsSync(getProjectFilePath(...parts)!);
   }
 
-  // Return false if no workspace folder is opened
+  // return false if no workspace folder is opened
   return false;
 }
-
 
 export function readProjectFile(...parts: string[]): string | undefined {
   if (projectPathExists(...parts)) {
     return fs.readFileSync(getProjectFilePath(...parts)!, 'utf-8');
   }
 }
-
 
 export function isFileInsideProject(file: string): boolean {
   const projectRoot = getProjectFilePath()!;
@@ -83,7 +82,7 @@ export async function downloadAndExtract(model: ProjectModel) {
 
 function getDownloadUrl(model: ProjectModel) {
     if (model.workflow === 'starter') {
-      // Starter Project
+      // Walking Skeleton Project
       const params = new URLSearchParams({
         name: model.name,
         artifactId: model.artifactId,
@@ -99,7 +98,7 @@ function getDownloadUrl(model: ProjectModel) {
       }).toString();
       return `https://start.vaadin.com/skeleton?${params}`;
     } else {
-  // Hello World Project
+      // Hello World Project
       const params = new URLSearchParams({
         name: model.name,
         artifactId: model.artifactId,
