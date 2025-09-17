@@ -13,22 +13,23 @@ export function getProjectFilePath(...parts: string[]) {
 }
 
 export function projectPathExists(...parts: string[]) {
-  // check if the user has any folders open in their workspace
-  // if yes, take the first one since we are not supporting multiple
-  // workspace folders
+  // Check if the user has any folders open in their workspace
+  // If yes, take the first one since we are not supporting multiple workspace folders
   if (vscode.workspace.workspaceFolders) {
     return fs.existsSync(getProjectFilePath(...parts)!);
   }
 
-  // return false if no workspace folder is opened
+  // Return false if no workspace folder is opened
   return false;
 }
+
 
 export function readProjectFile(...parts: string[]): string | undefined {
   if (projectPathExists(...parts)) {
     return fs.readFileSync(getProjectFilePath(...parts)!, 'utf-8');
   }
 }
+
 
 export function isFileInsideProject(file: string): boolean {
   const projectRoot = getProjectFilePath()!;
@@ -49,14 +50,31 @@ export async function downloadAndExtract(model: ProjectModel) {
   const response = await axios.get(url, { responseType: 'arraybuffer' });
   const zipBuffer = Buffer.from(response.data, 'binary');
 
-  const generatedProjectPath = path.join(model.location, model.artifactId);
+  // Extract the zip to a temporary folder
+  const tmp = require('os').tmpdir();
+  const tempExtractPath = path.join(tmp, 'vaadin-tmp-' + Date.now());
+  fs.mkdirSync(tempExtractPath);
+  const zip = new AdmZip(zipBuffer);
+  zip.extractAllTo(tempExtractPath, true, true);
+
+  // Find the root folder of the extracted project
+  const extractedFolders = fs.readdirSync(tempExtractPath).filter(f => fs.statSync(path.join(tempExtractPath, f)).isDirectory());
+  if (extractedFolders.length === 0) {
+    throw new Error('No project folder found in the downloaded zip');
+  }
+  const extractedRoot = path.join(tempExtractPath, extractedFolders[0]);
   const projectPath = path.join(model.location, model.name);
 
-  const zip = new AdmZip(zipBuffer);
-  zip.extractAllTo(model.location, true, true);
+  // If the destination folder already exists, remove it first
+  if (fs.existsSync(projectPath)) {
+    fs.rmSync(projectPath, { recursive: true, force: true });
+  }
 
-  // use project name from user input for project location
-  fs.renameSync(generatedProjectPath, projectPath);
+  // Move the extracted folder to the expected destination name
+  fs.renameSync(extractedRoot, projectPath);
+
+  // Clean up temporary folder
+  fs.rmSync(tempExtractPath, { recursive: true, force: true });
 
   console.log('Vaadin project created at ' + projectPath);
 
@@ -66,18 +84,37 @@ export async function downloadAndExtract(model: ProjectModel) {
 }
 
 function getDownloadUrl(model: ProjectModel) {
-  let frameworks = model.frameworks === '' ? 'empty' : model.frameworks;
-  let platformVersion = model.version === 'Stable' ? 'stable' : 'pre';
-
-  let params = new URLSearchParams({
-    frameworks,
-    platformVersion,
-    artifactId: model.artifactId,
-    groupId: model.groupId,
-    ref: 'vscode'
-  }).toString();
-
-  return `https://start.vaadin.com/skeleton?${params}`;
+    if (model.workflow === 'starter') {
+      // Starter Project
+      const params = new URLSearchParams({
+        name: model.name,
+        artifactId: model.artifactId,
+        groupId: model.groupId,
+        framework: model.starterType || 'flow',
+        language: 'java',
+        buildtool: 'maven',
+        stack: 'springboot',
+        skeleton: model.walkingSkeleton ? 'true' : 'false',
+        version: model.vaadinVersion || 'stable',
+        download: 'true',
+        ref: 'vscode-plugin',
+      }).toString();
+      return `https://start.vaadin.com/skeleton?${params}`;
+    } else {
+  // Hello World Project
+      const params = new URLSearchParams({
+        name: model.name,
+        artifactId: model.artifactId,
+        groupId: model.groupId,
+        framework: model.framework || 'flow',
+        language: model.language || 'java',
+        buildtool: model.buildTool || 'maven',
+        stack: model.architecture || 'springboot',
+        download: 'true',
+        ref: 'vscode-plugin',
+      }).toString();
+      return `https://start.vaadin.com/helloworld?${params}`;
+    }
 }
 
 /**
