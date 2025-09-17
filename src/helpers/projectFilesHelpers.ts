@@ -66,7 +66,14 @@ export async function downloadAndExtract(model: ProjectModel) {
 
   // Always use the provided model.name as the destination folder (already checked for conflicts)
   const projectPath = path.join(model.location, model.name);
-  fs.renameSync(extractedRoot, projectPath);
+  // Try to move a folder with renameSync, fallback to cpSync+rmSync if different devices in windows
+  console.log(`Renaming: ${extractedRoot} -> ${projectPath}`);
+  try {
+    fs.renameSync(extractedRoot, projectPath);
+  } catch (err: any) {
+    fs.cpSync(extractedRoot, projectPath, { recursive: true });
+    fs.rmSync(extractedRoot, { recursive: true, force: true });
+  }
 
   // Clean up temporary folder
   fs.rmSync(tempExtractPath, { recursive: true, force: true });
