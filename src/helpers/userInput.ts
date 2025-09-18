@@ -45,9 +45,9 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 
   // Select workflow (Walking Skeleton or Hello World)
   const workflowPick = await vscode.window.showQuickPick([
-    { label: 'Starter Project (minimal skeleton)', value: 'starter' },
-    { label: 'Hello World Project (basic demo)', value: 'helloworld' },
-  ], { placeHolder: '¿Qué tipo de proyecto Vaadin quieres crear?' });
+    { label: 'Starter Project - Full-featured application skeleton with user management and security', value: 'starter' },
+    { label: 'Hello World Project - Minimal project to get started quickly', value: 'helloworld' },
+  ], { placeHolder: 'Project Type' });
   if (!workflowPick) { return; }
   const workflow = workflowPick.value as 'starter' | 'helloworld';
 
@@ -98,19 +98,19 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 
   async function askForStarterOptions(name: string, groupId: string): Promise<ProjectModel | undefined> {
     const vaadinVersion = await vscode.window.showQuickPick([
-      { label: 'Stable (LTS, recomendado)', value: 'stable' },
-      { label: 'Prerelease (últimas features, puede ser inestable)', value: 'pre' },
-    ], { placeHolder: 'Selecciona la versión de Vaadin' });
+      { label: 'Stable (recommended)', value: 'stable' },
+      { label: 'Prerelease (last features may be unstable)', value: 'pre' },
+    ], { placeHolder: 'Vaadin Version' });
     if (!vaadinVersion) { return; }
     const walkingSkeleton = await vscode.window.showQuickPick([
       { label: 'Yes', value: true },
       { label: 'No', value: false },
-    ], { placeHolder: '¿Incluir Walking Skeleton (estructura mínima end-to-end)?' });
+    ], { placeHolder: 'Include Walking Skeleton (minimal app including a full end-to-end workflow)?' });
     if (!walkingSkeleton) { return; }
     const starterType = await vscode.window.showQuickPick([
       { label: 'Pure Java con Vaadin Flow', value: 'flow' },
       { label: 'Full-stack React con Vaadin Hilla', value: 'hilla' },
-    ], { placeHolder: 'Selecciona el tipo de starter' });
+    ], { placeHolder: 'Vaadin Framework to use' });
     if (!starterType) { return; }
     return {
       workflow: 'starter',
@@ -128,24 +128,24 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     const framework = await vscode.window.showQuickPick([
       { label: 'Flow / Java', value: 'flow' },
       { label: 'Hilla / React', value: 'hilla' },
-    ], { placeHolder: 'Selecciona el framework' });
+    ], { placeHolder: 'Vaadin Framework to use' });
     if (!framework) { return; }
     const language = await vscode.window.showQuickPick([
       { label: 'Java', value: 'java' },
       { label: 'Kotlin', value: 'kotlin' },
-    ], { placeHolder: 'Selecciona el lenguaje' });
+    ], { placeHolder: 'Language' });
     if (!language) { return; }
     const buildTool = await vscode.window.showQuickPick([
       { label: 'Maven', value: 'maven' },
       { label: 'Gradle', value: 'gradle' },
-    ], { placeHolder: 'Selecciona el build tool' });
+    ], { placeHolder: 'Build tool' });
     if (!buildTool) { return; }
     const architecture = await vscode.window.showQuickPick([
       { label: 'Spring Boot', value: 'springboot' },
       { label: 'Quarkus', value: 'quarkus' },
       { label: 'Jakarta EE', value: 'jakartaee' },
       { label: 'Servlet', value: 'servlet' },
-    ], { placeHolder: 'Selecciona la arquitectura' });
+    ], { placeHolder: 'Architecture' });
     if (!architecture) { return; }
     return {
       workflow: 'helloworld',
