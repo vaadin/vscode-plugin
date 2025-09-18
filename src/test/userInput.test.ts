@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { newProjectUserInput } from '../helpers/userInput';
 
 suite('User Input Test Suite', () => {
@@ -49,7 +50,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.vaadinVersion, 'stable');
     assert.strictEqual(model?.walkingSkeleton, true);
     assert.strictEqual(model?.starterType, 'flow');
-    assert.strictEqual(model?.location, '/tmp');
+    assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp'));
   });
 
   test('should return correct model for helloworld workflow (Hilla)', async () => {
@@ -78,7 +79,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.language, 'java');
     assert.strictEqual(model?.buildTool, 'maven');
     assert.strictEqual(model?.architecture, 'springboot');
-    assert.strictEqual(model?.location, '/tmp-hilla');
+    assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-hilla'));
   });
 
   test('should return correct model for helloworld workflow (Flow + Kotlin)', async () => {
@@ -107,7 +108,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.language, 'kotlin');
     assert.strictEqual(model?.buildTool, 'maven');
     assert.strictEqual(model?.architecture, 'springboot');
-    assert.strictEqual(model?.location, '/tmp-flowk');
+    assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-flowk'));
   });
 
   test('should return correct model for helloworld workflow (Flow + Java + Gradle)', async () => {
@@ -137,6 +138,6 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.language, 'java');
     assert.strictEqual(model?.buildTool, 'gradle');
     assert.strictEqual(model?.architecture, 'springboot');
-    assert.strictEqual(model?.location, '/tmp-flowg');
+    assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-flowg'));
   });
 });
