@@ -43,7 +43,7 @@ function getUserId() {
     if (userId === undefined) {
         userId = getUserKey();
         ampli.load({ environment: 'ideplugins' });
-        ampli.identify(userId, eventOptions)
+        ampli.identify(userId, eventOptions);
     }
     return userId;
 }
