@@ -8,8 +8,7 @@ export type ProjectModel = {
   location: string;
   // Walking Skeleton Project
   vaadinVersion?: string;
-  walkingSkeleton?: boolean;
-  starterType?: 'flow' | 'hilla';
+  starterType?: 'flow' | 'hilla' | string;
   // Hello World
   framework?: 'flow' | 'hilla';
   language?: 'java' | 'kotlin';
@@ -81,21 +80,29 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
 }
 
 async function askForStarterOptions(name: string, groupId: string): Promise<ProjectModel | undefined> {
+  // Example views
+  const exampleViews = await vscode.window.showQuickPick([
+    {
+      id: 'flow',
+      label: 'Java UI with Vaadin Flow',
+    },
+    {
+      id: 'hilla',
+      label: 'React UI with Vaadin Hilla',
+    }
+  ], {
+    placeHolder: 'Include Vaadin application skeleton?',
+    canPickMany: true,
+  });
+  if (!exampleViews) { return; }
+
+  // Version
   const vaadinVersion = await vscode.window.showQuickPick([
-    { label: 'Stable (recommended)', value: 'stable' },
-    { label: 'Prerelease (last features may be unstable)', value: 'pre' },
-  ], { placeHolder: 'Vaadin Version' });
+    { label: 'Stable', value: 'stable' },
+    { label: 'Prerelease', value: 'pre' },
+  ], { placeHolder: 'Select Vaadin Version' });
   if (!vaadinVersion) { return; }
-  const walkingSkeleton = await vscode.window.showQuickPick([
-    { label: 'Yes', value: true },
-    { label: 'No', value: false },
-  ], { placeHolder: 'Include Walking Skeleton (minimal app including a full end-to-end workflow)?' });
-  if (!walkingSkeleton) { return; }
-  const starterType = await vscode.window.showQuickPick([
-    { label: 'Pure Java con Vaadin Flow', value: 'flow' },
-    { label: 'Full-stack React con Vaadin Hilla', value: 'hilla' },
-  ], { placeHolder: 'Vaadin Framework to use' });
-  if (!starterType) { return; }
+
   return {
     workflow: 'starter',
     name: name.trim(),
@@ -103,8 +110,7 @@ async function askForStarterOptions(name: string, groupId: string): Promise<Proj
     groupId: groupId.trim(),
     location: '', // to be set after folder selection
     vaadinVersion: vaadinVersion.value as 'stable' | 'pre',
-    walkingSkeleton: walkingSkeleton.value as boolean,
-    starterType: starterType.value as 'flow' | 'hilla',
+    starterType: exampleViews.map(item => item.id).join(','),
   };
 }
 

@@ -98,7 +98,6 @@ function getDownloadUrl(model: ProjectModel) {
         language: 'java',
         buildtool: 'maven',
         stack: 'springboot',
-        skeleton: model.walkingSkeleton ? 'true' : 'false',
         version: model.vaadinVersion || 'stable',
         download: 'true',
         ref: 'vscode-plugin',
