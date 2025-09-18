@@ -125,38 +125,97 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   }
 
   async function askForHelloWorldOptions(name: string, groupId: string): Promise<ProjectModel | undefined> {
-    const framework = await vscode.window.showQuickPick([
+    const frameworkPick = await vscode.window.showQuickPick([
       { label: 'Flow / Java', value: 'flow' },
       { label: 'Hilla / React', value: 'hilla' },
     ], { placeHolder: 'Vaadin Framework to use' });
-    if (!framework) { return; }
-    const language = await vscode.window.showQuickPick([
+    if (!frameworkPick) { return; }
+    const framework = frameworkPick.value as 'flow' | 'hilla';
+
+    // Hilla: language is always Java, architecture is always Spring Boot
+    if (framework === 'hilla') {
+      const buildToolPick = await vscode.window.showQuickPick([
+        { label: 'Maven', value: 'maven' },
+        { label: 'Gradle', value: 'gradle' },
+      ], { placeHolder: 'Build tool' });
+      if (!buildToolPick) { return; }
+      return {
+        workflow: 'helloworld',
+        name: name.trim(),
+        artifactId: toArtifactId(name.trim()),
+        groupId: groupId.trim(),
+        location: '',
+        framework: 'hilla',
+        language: 'java',
+        buildTool: buildToolPick.value as 'maven' | 'gradle',
+        architecture: 'springboot',
+      };
+    }
+
+    // Flow: ask for language
+    const languagePick = await vscode.window.showQuickPick([
       { label: 'Java', value: 'java' },
       { label: 'Kotlin', value: 'kotlin' },
     ], { placeHolder: 'Language' });
-    if (!language) { return; }
-    const buildTool = await vscode.window.showQuickPick([
+    if (!languagePick) { return; }
+    const language = languagePick.value as 'java' | 'kotlin';
+
+    // Flow + Kotlin: build tool is always Maven, architecture is always Spring Boot
+    if (language === 'kotlin') {
+      return {
+        workflow: 'helloworld',
+        name: name.trim(),
+        artifactId: toArtifactId(name.trim()),
+        groupId: groupId.trim(),
+        location: '',
+        framework: 'flow',
+        language: 'kotlin',
+        buildTool: 'maven',
+        architecture: 'springboot',
+      };
+    }
+
+    // Flow + Java: ask for build tool
+    const buildToolPick = await vscode.window.showQuickPick([
       { label: 'Maven', value: 'maven' },
       { label: 'Gradle', value: 'gradle' },
     ], { placeHolder: 'Build tool' });
-    if (!buildTool) { return; }
-    const architecture = await vscode.window.showQuickPick([
+    if (!buildToolPick) { return; }
+    const buildTool = buildToolPick.value as 'maven' | 'gradle';
+
+    // Flow + Java + Gradle: architecture is always Spring Boot
+    if (buildTool === 'gradle') {
+      return {
+        workflow: 'helloworld',
+        name: name.trim(),
+        artifactId: toArtifactId(name.trim()),
+        groupId: groupId.trim(),
+        location: '',
+        framework: 'flow',
+        language: 'java',
+        buildTool: 'gradle',
+        architecture: 'springboot',
+      };
+    }
+
+    // Flow + Java + Maven: ask for architecture
+    const architecturePick = await vscode.window.showQuickPick([
       { label: 'Spring Boot', value: 'springboot' },
       { label: 'Quarkus', value: 'quarkus' },
       { label: 'Jakarta EE', value: 'jakartaee' },
       { label: 'Servlet', value: 'servlet' },
     ], { placeHolder: 'Architecture' });
-    if (!architecture) { return; }
+    if (!architecturePick) { return; }
     return {
       workflow: 'helloworld',
       name: name.trim(),
       artifactId: toArtifactId(name.trim()),
       groupId: groupId.trim(),
-      location: '', // to be set after folder selection
-      framework: framework.value as 'flow' | 'hilla',
-      language: language.value as 'java' | 'kotlin',
-      buildTool: buildTool.value as 'maven' | 'gradle',
-      architecture: architecture.value as 'springboot' | 'quarkus' | 'jakartaee' | 'servlet',
+      location: '',
+      framework: 'flow',
+      language: 'java',
+      buildTool: 'maven',
+      architecture: architecturePick.value as 'springboot' | 'quarkus' | 'jakartaee' | 'servlet',
     };
   }
 }
