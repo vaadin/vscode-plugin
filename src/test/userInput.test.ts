@@ -46,7 +46,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.name, 'MyProject');
     assert.strictEqual(model?.groupId, 'com.example');
     assert.strictEqual(model?.vaadinVersion, 'stable');
-    assert.strictEqual(model?.starterType, 'flow');
+    assert.deepStrictEqual(model?.type, ['flow']);
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp'));
   });
 
@@ -73,7 +73,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.name, 'MyProjectFH');
     assert.strictEqual(model?.groupId, 'com.example.fh');
     assert.strictEqual(model?.vaadinVersion, 'stable');
-  assert.strictEqual(model?.starterType, 'flow,hilla');
+    assert.deepStrictEqual(model?.type, ['flow', 'hilla']);
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-fh'));
   });
 
@@ -100,7 +100,7 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.name, 'MyProjectNone');
     assert.strictEqual(model?.groupId, 'com.example.none');
     assert.strictEqual(model?.vaadinVersion, 'stable');
-  assert.strictEqual(model?.starterType, '');
+    assert.deepStrictEqual(model?.type, []);
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-none'));
   });
 
@@ -126,9 +126,9 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.workflow, 'helloworld');
     assert.strictEqual(model?.name, 'HelloWorldHilla');
     assert.strictEqual(model?.groupId, 'org.hilla');
-    assert.strictEqual(model?.framework, 'hilla');
+    assert.deepStrictEqual(model?.type, ['hilla']);
     assert.strictEqual(model?.language, 'java');
-    assert.strictEqual(model?.buildTool, 'maven');
+    assert.strictEqual(model?.tool, 'maven');
     assert.strictEqual(model?.architecture, 'springboot');
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-hilla'));
   });
@@ -155,9 +155,9 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.workflow, 'helloworld');
     assert.strictEqual(model?.name, 'HelloWorldKotlin');
     assert.strictEqual(model?.groupId, 'org.flowk');
-    assert.strictEqual(model?.framework, 'flow');
+    assert.deepStrictEqual(model?.type, ['flow']);
     assert.strictEqual(model?.language, 'kotlin');
-    assert.strictEqual(model?.buildTool, 'maven');
+    assert.strictEqual(model?.tool, 'maven');
     assert.strictEqual(model?.architecture, 'springboot');
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-flowk'));
   });
@@ -185,9 +185,9 @@ suite('User Input Test Suite', () => {
     assert.strictEqual(model?.workflow, 'helloworld');
     assert.strictEqual(model?.name, 'HelloWorldGradle');
     assert.strictEqual(model?.groupId, 'org.flowg');
-    assert.strictEqual(model?.framework, 'flow');
+    assert.deepStrictEqual(model?.type, ['flow']);
     assert.strictEqual(model?.language, 'java');
-    assert.strictEqual(model?.buildTool, 'gradle');
+    assert.strictEqual(model?.tool, 'gradle');
     assert.strictEqual(model?.architecture, 'springboot');
     assert.strictEqual(path.resolve(model?.location || ''), path.resolve('/tmp-flowg'));
   });

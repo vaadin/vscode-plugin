@@ -63,8 +63,6 @@ export async function downloadAndExtract(model: ProjectModel) {
   }
   const extractedRoot = path.join(tempExtractPath, extractedFolders[0]);
 
-
-  // Always use the provided model.name as the destination folder (already checked for conflicts)
   const projectPath = path.join(model.location, model.name);
   // Try to move a folder with renameSync, fallback to cpSync+rmSync if different devices in windows
   console.log(`Renaming: ${extractedRoot} -> ${projectPath}`);
@@ -94,13 +92,10 @@ function getDownloadUrl(model: ProjectModel) {
         name: model.name,
         artifactId: model.artifactId,
         groupId: model.groupId,
-        framework: model.starterType || 'flow',
-        language: 'java',
-        buildtool: 'maven',
-        stack: 'springboot',
-        version: model.vaadinVersion || 'stable',
+        platformVersion: model.vaadinVersion || 'stable',
         download: 'true',
         ref: 'vscode-plugin',
+        frameworks: model.type?.length ? model.type.join(',') : ''
       }).toString();
       return `https://start.vaadin.com/skeleton?${params}`;
     } else {
@@ -109,9 +104,9 @@ function getDownloadUrl(model: ProjectModel) {
         name: model.name,
         artifactId: model.artifactId,
         groupId: model.groupId,
-        framework: model.framework || 'flow',
+        framework: model.type?.length ? model.type[0] : 'flow',
         language: model.language || 'java',
-        buildtool: model.buildTool || 'maven',
+        buildtool: model.tool || 'maven',
         stack: model.architecture || 'springboot',
         download: 'true',
         ref: 'vscode-plugin',

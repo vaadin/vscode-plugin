@@ -6,18 +6,49 @@ export type ProjectModel = {
   artifactId: string;
   groupId: string;
   location: string;
+  type?: ('flow' | 'hilla')[];
   // Walking Skeleton Project
   vaadinVersion?: string;
-  starterType?: 'flow' | 'hilla' | string;
   // Hello World
-  framework?: 'flow' | 'hilla';
   language?: 'java' | 'kotlin';
-  buildTool?: 'maven' | 'gradle';
+  tool?: 'maven' | 'gradle';
   architecture?: 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
 };
 
 // based on https://github.com/marcushellberg/luoja
 export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
+
+
+  // Select workflow (Walking Skeleton or Hello World)
+  const workflowPick = await vscode.window.showQuickPick([
+    {
+      label: 'Starter Project ', value: 'starter',
+      detail: 'Full-featured application skeleton with user management and security'
+    },
+    {
+      label: 'Hello World Project', value: 'helloworld',
+      detail: 'Minimal project to get started quickly'
+    },
+  ], { placeHolder: 'Project Type' });
+  if (!workflowPick) { return; }
+  const workflow = workflowPick.value as 'starter' | 'helloworld';
+
+  let model: ProjectModel | undefined = {
+    name: 'NewProject',
+    artifactId: 'new-project',
+    groupId: 'com.example.application',
+    workflow,
+    location: '',
+  };
+
+  // Select further options based on workflow
+  if (workflow === 'starter') {
+    model = await askForStarterOptions(model);
+  } else {
+    model = await askForHelloWorldOptions(model);
+  }
+  if (!model) { return; }
+
   // Project Name
   const name = await vscode.window.showInputBox({
     prompt: 'Project Name ',
@@ -41,23 +72,6 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   });
   if (!groupId) { return; }
 
-  // Select workflow (Walking Skeleton or Hello World)
-  const workflowPick = await vscode.window.showQuickPick([
-    { label: 'Starter Project - Full-featured application skeleton with user management and security', value: 'starter' },
-    { label: 'Hello World Project - Minimal project to get started quickly', value: 'helloworld' },
-  ], { placeHolder: 'Project Type' });
-  if (!workflowPick) { return; }
-  const workflow = workflowPick.value as 'starter' | 'helloworld';
-
-  // Select further options based on workflow
-  let model: ProjectModel | undefined;
-  if (workflow === 'starter') {
-    model = await askForStarterOptions(name, groupId);
-  } else {
-    model = await askForHelloWorldOptions(name, groupId);
-  }
-  if (!model) { return; }
-
   // Folder selection
   const locationUri = await vscode.window.showOpenDialog({
     canSelectFiles: false,
@@ -68,18 +82,22 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   });
   const location = locationUri ? locationUri[0].fsPath : undefined;
   if (!location) { return; }
-  model.location = location;
 
   // Check for folder conflict and propose new name if needed
-  const folderName = await computeFolderName(model.name, location);
+  const folderName = await computeFolderName(name.trim(), location);
   if (!folderName) {return;}
-  model.name = folderName;
 
-  model.artifactId = toArtifactId(model.name);
-  return model;
+  // Return model with final values
+  return {
+    ...model,
+    name: folderName,
+    groupId: groupId.trim(),
+    artifactId: toArtifactId(folderName),
+    location,
+  };
 }
 
-async function askForStarterOptions(name: string, groupId: string): Promise<ProjectModel | undefined> {
+async function askForStarterOptions(model: ProjectModel): Promise<ProjectModel | undefined> {
   // Example views
   const exampleViews = await vscode.window.showQuickPick([
     {
@@ -104,17 +122,14 @@ async function askForStarterOptions(name: string, groupId: string): Promise<Proj
   if (!vaadinVersion) { return; }
 
   return {
+    ...model,
     workflow: 'starter',
-    name: name.trim(),
-    artifactId: toArtifactId(name.trim()),
-    groupId: groupId.trim(),
-    location: '', // to be set after folder selection
     vaadinVersion: vaadinVersion.value as 'stable' | 'pre',
-    starterType: exampleViews.map(item => item.id).join(','),
+    type: exampleViews.map(item => item.id) as ('flow' | 'hilla')[],
   };
 }
 
-async function askForHelloWorldOptions(name: string, groupId: string): Promise<ProjectModel | undefined> {
+async function askForHelloWorldOptions(model: ProjectModel): Promise<ProjectModel | undefined> {
   // Set defaults for all options
   let language: 'java' | 'kotlin' = 'java';
   let buildTool: 'maven' | 'gradle' = 'maven';
@@ -172,16 +187,12 @@ async function askForHelloWorldOptions(name: string, groupId: string): Promise<P
     }
   }
 
-  // Return the collected model
   return {
+    ...model,
     workflow: 'helloworld',
-    name: name.trim(),
-    artifactId: toArtifactId(name.trim()),
-    groupId: groupId.trim(),
-    location: '',
-    framework,
+    type: [framework],
     language,
-    buildTool,
+    tool: buildTool,
     architecture,
   };
 }
