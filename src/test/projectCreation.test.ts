@@ -11,6 +11,7 @@ const TEST_ARTIFACT_ID_CONFLICT = 'vaadin-conflict-unique-test-project-1';
 const TEST_PROJECT_NAME_STARTER = 'VaadinStarterUniqueTestProject';
 const TEST_PROJECT_NAME_HELLO = 'VaadinHelloUniqueTestProject';
 const TEST_PROJECT_NAME_CONFLICT = 'VaadinConflictUniqueTestProject';
+const TEST_PROJECT_NAME_SKELETON_STARTER_SPRING = 'skeleton-starter-flow-spring-24';
 const TEST_TIMEOUT_MS = 10000;
 
 const findFilesRecursively = (
@@ -50,19 +51,13 @@ const hasHillaViews = (projectPath: string): boolean => {
   return findFilesRecursively(viewsDir, () => true); // Any file
 };
 
-// Helper function to wait for file existence with retries (for Windows compatibility)
-const waitForFile = async (filePath: string, maxRetries = 20, delay = 200): Promise<boolean> => {
-  for (let i = 0; i < maxRetries; i++) {
-    if (fs.existsSync(filePath)) {
-      return true;
-    }
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
-  return false;
-};
 
-suite('Vaadin Project Creation Test Suite', () => {
+
+suite('Vaadin Project Creation Test Suite', function() {
   const testLocation = path.join(__dirname, 'tmp-projects');
+
+  // Set timeout for all tests in this suite
+  this.timeout(TEST_TIMEOUT_MS);
 
   setup(() => {
     if (!fs.existsSync(testLocation)) {
@@ -80,8 +75,6 @@ suite('Vaadin Project Creation Test Suite', () => {
   });
 
   test('Should create a Starter Project with the expected folder name', async function() {
-    this.timeout(TEST_TIMEOUT_MS);
-
     const model = {
       workflow: 'starter' as const,
       name: TEST_PROJECT_NAME_STARTER,
@@ -94,8 +87,9 @@ suite('Vaadin Project Creation Test Suite', () => {
     };
     await downloadAndExtract(model);
     const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
-    const projectExists = await waitForFile(expectedPath);
-    assert.ok(projectExists, 'Project folder should exist');
+    // Give a small delay to ensure file system operations are complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+    assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that Flow views exist (since we specified 'flow' framework)
     assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID), 'Flow views (Java files ending in View.java) should exist for Flow framework selection');
@@ -109,8 +103,6 @@ suite('Vaadin Project Creation Test Suite', () => {
   });
 
   test('Should create a Starter Project with Flow and Hilla and include React components', async function() {
-    this.timeout(TEST_TIMEOUT_MS);
-
     const model = {
       workflow: 'starter' as const,
       name: TEST_PROJECT_NAME_STARTER,
@@ -124,8 +116,7 @@ suite('Vaadin Project Creation Test Suite', () => {
     await downloadAndExtract(model);
 
     const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
-    const projectExists = await waitForFile(expectedPath);
-    assert.ok(projectExists, 'Project folder should exist');
+    assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that Flow views exist (since we specified 'flow' framework)
     assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID), 'Flow views (Java files ending in View.java) should exist for Flow framework selection');
@@ -135,8 +126,6 @@ suite('Vaadin Project Creation Test Suite', () => {
   });
 
   test('Should create a Starter Project with no frameworks and exclude both Java and React views', async function() {
-    this.timeout(TEST_TIMEOUT_MS);
-
     const model = {
       workflow: 'starter' as const,
       name: TEST_PROJECT_NAME_STARTER,
@@ -150,8 +139,7 @@ suite('Vaadin Project Creation Test Suite', () => {
     await downloadAndExtract(model);
 
     const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
-    const projectExists = await waitForFile(expectedPath);
-    assert.ok(projectExists, 'Project folder should exist');
+    assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that pom.xml exists and contains the correct artifactId
     const pomPath = path.join(expectedPath, 'pom.xml');
@@ -168,7 +156,6 @@ suite('Vaadin Project Creation Test Suite', () => {
   });
 
   test('Should create a Hello World Project with the expected folder name', async function() {
-    this.timeout(TEST_TIMEOUT_MS);
     const model = {
       workflow: 'helloworld' as const,
       name: TEST_PROJECT_NAME_HELLO,
@@ -183,12 +170,10 @@ suite('Vaadin Project Creation Test Suite', () => {
     await downloadAndExtract(model);
 
     const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_HELLO);
-    const projectExists = await waitForFile(expectedPath);
-    assert.ok(projectExists, 'Project folder should exist');
+    assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
   });
 
   test('Should increment folder name if it already exists', async function() {
-    this.timeout(TEST_TIMEOUT_MS);
     const baseName = TEST_PROJECT_NAME_CONFLICT;
     const firstPath = path.join(testLocation, baseName);
     fs.mkdirSync(firstPath);
@@ -206,7 +191,6 @@ suite('Vaadin Project Creation Test Suite', () => {
     await downloadAndExtract(model);
 
     const expectedPath = path.join(testLocation, baseName + '-1');
-    const projectExists = await waitForFile(expectedPath);
-    assert.ok(projectExists, 'Incremented project folder should exist');
+    assert.ok(fs.existsSync(expectedPath), 'Incremented project folder should exist');
   });
 });
