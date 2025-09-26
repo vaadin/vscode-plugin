@@ -18,26 +18,18 @@ const findFilesRecursively = (
   startDir: string,
   fileCondition: (fileName: string) => boolean
 ): boolean => {
-  try {
-    if (!fs.existsSync(startDir)) {
-      return false;
-    }
-    const items = fs.readdirSync(startDir, { withFileTypes: true });
-    for (const item of items) {
-      const fullPath = path.join(startDir, item.name);
-
-      if (item.isDirectory()) {
-        if (findFilesRecursively(fullPath, fileCondition)) {
-          return true;
-        }
-      } else if (fileCondition(item.name)) {
-        return true;
-      }
-    }
-    return false;
-  } catch {
+  if (!fs.existsSync(startDir)) {
     return false;
   }
+
+  const items = fs.readdirSync(startDir, { withFileTypes: true });
+
+  return items.some(item => {
+    if (item.isDirectory()) {
+      return findFilesRecursively(path.join(startDir, item.name), fileCondition);
+    }
+    return fileCondition(item.name);
+  });
 };
 
 const hasFlowViews = (projectPath: string, groupId: string): boolean => {
