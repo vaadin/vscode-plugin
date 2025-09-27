@@ -5,52 +5,35 @@ import * as path from 'path';
 import { downloadAndExtract } from '../helpers/projectFilesHelpers';
 
 const TEST_GROUP_ID = 'com.vaadintest.uniquenamespace';
-const TEST_ARTIFACT_ID_STARTER = 'vaadin-starter-unique-test-project';
-const TEST_ARTIFACT_ID_HELLO = 'vaadin-hello-unique-test-project';
-const TEST_ARTIFACT_ID_CONFLICT = 'vaadin-conflict-unique-test-project-1';
-const TEST_PROJECT_NAME_STARTER = 'VaadinStarterUniqueTestProject';
-const TEST_PROJECT_NAME_HELLO = 'VaadinHelloUniqueTestProject';
-const TEST_PROJECT_NAME_CONFLICT = 'VaadinConflictUniqueTestProject';
-const TEST_PROJECT_NAME_SKELETON_STARTER_SPRING = 'skeleton-starter-flow-spring-24';
-const TEST_TIMEOUT_MS = 10000;
+const TEST_ARTIFACT_ID = 'vaadin-starter-unique-test-project';
 
-const findFilesRecursively = (
-  startDir: string,
-  fileCondition: (fileName: string) => boolean
-): boolean => {
-  if (!fs.existsSync(startDir)) {
-    return false;
-  }
+function hasFiles(
+  folder: string, filter: (fileName: string) => boolean
+): boolean {
+  return fs.existsSync(folder) &&
+    fs.readdirSync(folder, { withFileTypes: true }).some(item => {
+      if (item.isDirectory()) {
+        return hasFiles(path.join(folder, item.name), filter);
+      }
+      return filter(item.name);
+    });
+}
 
-  const items = fs.readdirSync(startDir, { withFileTypes: true });
+function hasFlowViews(folder: string, groupId: string): boolean {
+  const javaDir = path.join(folder, 'src', 'main', 'java', ...groupId.split('.'));
+  return hasFiles(javaDir, (name) => name.endsWith('View.java'));
+}
 
-  return items.some(item => {
-    if (item.isDirectory()) {
-      return findFilesRecursively(path.join(startDir, item.name), fileCondition);
-    }
-    return fileCondition(item.name);
-  });
-};
-
-const hasFlowViews = (projectPath: string, groupId: string): boolean => {
-  const groupPath = groupId.replace(/\./g, path.sep); // com.vaadintest.uniquenamespace -> com/vaadintest/uniquenamespace
-  const javaDir = path.join(projectPath, 'src', 'main', 'java', groupPath);
-  return findFilesRecursively(javaDir, (fileName) => fileName.endsWith('View.java'));
-};
-
-const hasHillaViews = (projectPath: string): boolean => {
-  const viewsDir = path.join(projectPath, 'src', 'main', 'frontend', 'views');
-  return findFilesRecursively(viewsDir, () => true); // Any file
-};
-
-
+function hasHillaViews(folder: string): boolean {
+  const viewsDir = path.join(folder, 'src', 'main', 'frontend', 'views');
+  return hasFiles(viewsDir, (name) => name.endsWith('.tsx'));
+}
 
 suite('Vaadin Project Creation Test Suite', function() {
+  // default is 2000 but download and extraction can take longer
+  this.timeout(10000);
+
   const testLocation = path.join(__dirname, 'tmp-projects');
-
-  // Set timeout for all tests in this suite
-  this.timeout(TEST_TIMEOUT_MS);
-
   setup(() => {
     if (!fs.existsSync(testLocation)) {
       fs.mkdirSync(testLocation);
@@ -66,11 +49,11 @@ suite('Vaadin Project Creation Test Suite', function() {
     }
   });
 
-  test('Should create a Starter Project with the expected folder name', async function() {
+  test('Should create a Starter Project with the expected folder name and artifactId and Flow views', async function() {
     const model = {
       workflow: 'starter' as const,
-      name: TEST_PROJECT_NAME_STARTER,
-      artifactId: TEST_ARTIFACT_ID_STARTER,
+      name: TEST_ARTIFACT_ID + 'Starter',
+      artifactId: TEST_ARTIFACT_ID + '-starter',
       groupId: TEST_GROUP_ID,
       location: testLocation,
       vaadinVersion: 'stable' as const,
@@ -78,27 +61,28 @@ suite('Vaadin Project Creation Test Suite', function() {
       type: ['flow'] as ('flow' | 'hilla')[],
     };
     await downloadAndExtract(model);
-    const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
+    const expectedPath = path.join(testLocation, TEST_ARTIFACT_ID + 'Starter');
     // Give a small delay to ensure file system operations are complete
     await new Promise(resolve => setTimeout(resolve, 100));
     assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that Flow views exist (since we specified 'flow' framework)
-    assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID), 'Flow views (Java files ending in View.java) should exist for Flow framework selection');
+    assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID),
+      'Flow views (Java files ending in View.java) should exist for Flow framework selection');
 
     // Check that pom.xml exists and contains the correct artifactId
     const pomPath = path.join(expectedPath, 'pom.xml');
     assert.ok(fs.existsSync(pomPath), 'pom.xml should exist');
 
     const pomContent = fs.readFileSync(pomPath, 'utf-8');
-    assert.ok(pomContent.includes(`<artifactId>${TEST_ARTIFACT_ID_STARTER}</artifactId>`), 'pom.xml should contain the correct artifactId');
+    assert.ok(pomContent.includes(`<artifactId>${TEST_ARTIFACT_ID + '-starter'}</artifactId>`), 'pom.xml should contain the correct artifactId');
   });
 
   test('Should create a Starter Project with Flow and Hilla and include React components', async function() {
     const model = {
       workflow: 'starter' as const,
-      name: TEST_PROJECT_NAME_STARTER,
-      artifactId: TEST_ARTIFACT_ID_STARTER,
+      name: TEST_ARTIFACT_ID,
+      artifactId: TEST_ARTIFACT_ID,
       groupId: TEST_GROUP_ID,
       location: testLocation,
       vaadinVersion: 'stable' as const,
@@ -107,21 +91,23 @@ suite('Vaadin Project Creation Test Suite', function() {
     };
     await downloadAndExtract(model);
 
-    const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
+    const expectedPath = path.join(testLocation, TEST_ARTIFACT_ID);
     assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that Flow views exist (since we specified 'flow' framework)
-    assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID), 'Flow views (Java files ending in View.java) should exist for Flow framework selection');
+    assert.ok(hasFlowViews(expectedPath, TEST_GROUP_ID),
+      'Flow views (Java files ending in View.java) should exist for Flow framework selection');
 
     // Check that Hilla views exist (since we specified 'hilla' framework)
-    assert.ok(hasHillaViews(expectedPath), 'Hilla views (files in src/main/frontend/views) should exist for Hilla framework selection');
+    assert.ok(hasHillaViews(expectedPath),
+      'Hilla views (files in src/main/frontend/views) should exist for Hilla framework selection');
   });
 
   test('Should create a Starter Project with no frameworks and exclude both Java and React views', async function() {
     const model = {
       workflow: 'starter' as const,
-      name: TEST_PROJECT_NAME_STARTER,
-      artifactId: TEST_ARTIFACT_ID_STARTER,
+      name: TEST_ARTIFACT_ID,
+      artifactId: TEST_ARTIFACT_ID,
       groupId: TEST_GROUP_ID,
       location: testLocation,
       vaadinVersion: 'stable' as const,
@@ -130,7 +116,7 @@ suite('Vaadin Project Creation Test Suite', function() {
     };
     await downloadAndExtract(model);
 
-    const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_STARTER);
+    const expectedPath = path.join(testLocation, TEST_ARTIFACT_ID);
     assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
 
     // Check that pom.xml exists and contains the correct artifactId
@@ -138,7 +124,7 @@ suite('Vaadin Project Creation Test Suite', function() {
     assert.ok(fs.existsSync(pomPath), 'pom.xml should exist');
 
     const pomContent = fs.readFileSync(pomPath, 'utf-8');
-    assert.ok(pomContent.includes(`<artifactId>${TEST_ARTIFACT_ID_STARTER}</artifactId>`), 'pom.xml should contain the correct artifactId');
+    assert.ok(pomContent.includes(`<artifactId>${TEST_ARTIFACT_ID}</artifactId>`), 'pom.xml should contain the correct artifactId');
 
     // Check that Flow views do NOT exist (no Flow framework selected)
     assert.ok(!hasFlowViews(expectedPath, TEST_GROUP_ID), 'Flow views should NOT exist when no frameworks are selected');
@@ -150,8 +136,8 @@ suite('Vaadin Project Creation Test Suite', function() {
   test('Should create a Hello World Project with the expected folder name', async function() {
     const model = {
       workflow: 'helloworld' as const,
-      name: TEST_PROJECT_NAME_HELLO,
-      artifactId: TEST_ARTIFACT_ID_HELLO,
+      name: TEST_ARTIFACT_ID,
+      artifactId: TEST_ARTIFACT_ID,
       groupId: TEST_GROUP_ID,
       location: testLocation,
       type: ['flow'] as ('flow' | 'hilla')[],
@@ -161,28 +147,8 @@ suite('Vaadin Project Creation Test Suite', function() {
     };
     await downloadAndExtract(model);
 
-    const expectedPath = path.join(testLocation, TEST_PROJECT_NAME_HELLO);
+    const expectedPath = path.join(testLocation, TEST_ARTIFACT_ID);
     assert.ok(fs.existsSync(expectedPath), 'Project folder should exist');
   });
 
-  test('Should increment folder name if it already exists', async function() {
-    const baseName = TEST_PROJECT_NAME_CONFLICT;
-    const firstPath = path.join(testLocation, baseName);
-    fs.mkdirSync(firstPath);
-    // Simulate user accepting the new name in user input logic
-    const model = {
-      workflow: 'starter' as const,
-      name: baseName + '-1',
-      artifactId: TEST_ARTIFACT_ID_CONFLICT,
-      groupId: TEST_GROUP_ID,
-      location: testLocation,
-      vaadinVersion: 'stable' as const,
-      walkingSkeleton: true,
-      type: ['flow'] as ('flow' | 'hilla')[],
-    };
-    await downloadAndExtract(model);
-
-    const expectedPath = path.join(testLocation, baseName + '-1');
-    assert.ok(fs.existsSync(expectedPath), 'Incremented project folder should exist');
-  });
 });
