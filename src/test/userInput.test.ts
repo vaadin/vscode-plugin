@@ -1,89 +1,63 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { newProjectUserInput } from '../helpers/userInput';
+import { newProjectUserInput, ProjectModel } from '../helpers/userInput';
 
 // Import fs using require to allow mocking
 const fs = require('fs');
 
-// Helper types for test configuration
-interface MockInputs {
-  projectName: string;
-  groupId: string;
-  workflow: 'starter' | 'helloworld';
-  frameworks?: ('flow' | 'hilla')[];
-  vaadinVersion?: 'stable' | 'pre';
-  language?: 'java' | 'kotlin';
-  buildTool?: 'maven' | 'gradle';
-  location: string;
+// Helper types for test configuration based on ProjectModel
+interface MockInputs extends Partial<ProjectModel> {
+  projectName: string; // Maps to name in ProjectModel
+  frameworks?: ('flow' | 'hilla')[]; // Maps to type in ProjectModel
+  buildTool?: 'maven' | 'gradle'; // Maps to tool in ProjectModel
   folderExists?: boolean;
   userAcceptsFolderConflict?: boolean;
-}
-
-interface ExpectedModel {
-  workflow: 'starter' | 'helloworld';
-  name: string;
-  groupId: string;
-  vaadinVersion?: 'stable' | 'pre';
-  type?: ('flow' | 'hilla')[];
-  language?: 'java' | 'kotlin';
-  tool?: 'maven' | 'gradle';
-  architecture?: 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
-  location: string;
 }
 
 // Helper function to setup mocks based on configuration
 function setupMocks(config: MockInputs): { warningCalled: () => boolean } {
   let warningMessageCalled = false;
-
-  let inputBoxCalls = 0;
+  let inputBoxCalls = 0, quickPickCalls = 0;
   vscode.window.showInputBox = async () => {
     inputBoxCalls++;
     return inputBoxCalls === 1 ? config.projectName : config.groupId;
   };
-
-  let quickPickCalls = 0;
   vscode.window.showQuickPick = async (items: any, options?: any) => {
     quickPickCalls++;
-
     if (quickPickCalls === 1) {
       return items.find((i: any) => i.value === config.workflow);
     }
-
     if (config.workflow === 'starter') {
       if (quickPickCalls === 2 && options?.canPickMany) {
-        return config.frameworks?.map(fw => ({
-          id: fw,
-          label: fw === 'flow' ? 'Java UI with Vaadin Flow' : 'React UI with Vaadin Hilla'
-        })) || [];
+        return (config.frameworks || config.type)?.map(fw => ({id: fw, label: fw})) || [];
       }
       if (quickPickCalls === 3) {
         return items.find((i: any) => i.value === (config.vaadinVersion || 'stable'));
       }
     } else if (config.workflow === 'helloworld') {
       if (quickPickCalls === 2) {
-        const framework = config.frameworks?.[0] || 'flow';
+        const framework = (config.frameworks || config.type)?.[0] || 'flow';
         return items.find((i: any) => i.value === framework);
       }
       if (quickPickCalls === 3) {
         // For hilla framework, this is the build tool selection
-        if (config.frameworks?.[0] === 'hilla') {
-          return items.find((i: any) => i.value === (config.buildTool || 'maven'));
+        if ((config.frameworks || config.type)?.[0] === 'hilla') {
+          return items.find((i: any) => i.value === (config.buildTool || config.tool || 'maven'));
         }
         // For flow framework, this is the language selection
         return items.find((i: any) => i.value === (config.language || 'java'));
       }
       if (quickPickCalls === 4) {
         // Only for flow + java, this is the build tool selection
-        return items.find((i: any) => i.value === (config.buildTool || 'maven'));
+        return items.find((i: any) => i.value === (config.buildTool || config.tool || 'maven'));
       }
     }
-
     return undefined;
   };
 
-  vscode.window.showOpenDialog = async () => [vscode.Uri.file(config.location)];
-
+  vscode.window.showOpenDialog = async () => [vscode.Uri.file(config.location || '/tmp')];
+  
   vscode.window.showWarningMessage = async (message: string) => {
     warningMessageCalled = true;
     if (config.folderExists) {
@@ -107,13 +81,13 @@ function setupMocks(config: MockInputs): { warningCalled: () => boolean } {
   return { warningCalled: () => warningMessageCalled };
 }
 
-// Helper function to assert model properties
-function assertModel(model: any, expected: ExpectedModel, warningCalled?: boolean) {
+// Helper function to assert model properties using ProjectModel
+function assertModel(model: any, expected: Partial<ProjectModel>, warningCalled?: boolean) {
   assert.ok(model, "Model should exist");
   assert.strictEqual(model?.workflow, expected.workflow);
   assert.strictEqual(model?.name, expected.name);
   assert.strictEqual(model?.groupId, expected.groupId);
-  assert.strictEqual(path.resolve(model?.location || ''), path.resolve(expected.location));
+  assert.strictEqual(path.resolve(model?.location || ''), path.resolve(expected.location || ''));
 
   if (expected.vaadinVersion) {
     assert.strictEqual(model?.vaadinVersion, expected.vaadinVersion);
@@ -163,7 +137,7 @@ suite('User Input Test Suite', () => {
       projectName: 'MyProject',
       groupId: 'com.example',
       workflow: 'starter',
-      frameworks: ['flow'],
+      type: ['flow'],
       vaadinVersion: 'stable',
       location: '/tmp'
     });
@@ -184,7 +158,7 @@ suite('User Input Test Suite', () => {
       projectName: 'MyProjectFH',
       groupId: 'com.example.fh',
       workflow: 'starter',
-      frameworks: ['flow', 'hilla'],
+      type: ['flow', 'hilla'],
       vaadinVersion: 'stable',
       location: '/tmp-fh'
     });
@@ -205,7 +179,7 @@ suite('User Input Test Suite', () => {
       projectName: 'MyProjectNone',
       groupId: 'com.example.none',
       workflow: 'starter',
-      frameworks: [],
+      type: [],
       vaadinVersion: 'stable',
       location: '/tmp-none'
     });
@@ -226,9 +200,9 @@ suite('User Input Test Suite', () => {
       projectName: 'HelloWorldHilla',
       groupId: 'org.hilla',
       workflow: 'helloworld',
-      frameworks: ['hilla'],
+      type: ['hilla'],
       language: 'java',
-      buildTool: 'maven',
+      tool: 'maven',
       location: '/tmp-hilla'
     });
 
@@ -250,9 +224,9 @@ suite('User Input Test Suite', () => {
       projectName: 'HelloWorldKotlin',
       groupId: 'org.flowk',
       workflow: 'helloworld',
-      frameworks: ['flow'],
+      type: ['flow'],
       language: 'kotlin',
-      buildTool: 'maven',
+      tool: 'maven',
       location: '/tmp-flowk'
     });
 
@@ -274,9 +248,9 @@ suite('User Input Test Suite', () => {
       projectName: 'HelloWorldGradle',
       groupId: 'org.flowg',
       workflow: 'helloworld',
-      frameworks: ['flow'],
+      type: ['flow'],
       language: 'java',
-      buildTool: 'gradle',
+      tool: 'gradle',
       location: '/tmp-flowg'
     });
 
@@ -298,7 +272,7 @@ suite('User Input Test Suite', () => {
       projectName: 'MyProject',
       groupId: 'com.example',
       workflow: 'starter',
-      frameworks: ['flow'],
+      type: ['flow'],
       vaadinVersion: 'stable',
       location: '/tmp',
       folderExists: true,
@@ -322,7 +296,7 @@ suite('User Input Test Suite', () => {
       projectName: 'MyProject',
       groupId: 'com.example',
       workflow: 'starter',
-      frameworks: ['flow'],
+      type: ['flow'],
       vaadinVersion: 'stable',
       location: '/tmp',
       folderExists: true,
@@ -340,9 +314,9 @@ suite('User Input Test Suite', () => {
       projectName: 'HelloWorldTest',
       groupId: 'org.test',
       workflow: 'helloworld',
-      frameworks: ['hilla'],
+      type: ['hilla'],
       language: 'java',
-      buildTool: 'maven',
+      tool: 'maven',
       location: '/tmp-test',
       folderExists: true,
       userAcceptsFolderConflict: true
