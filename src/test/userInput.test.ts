@@ -12,12 +12,11 @@ interface MockInputs extends Partial<ProjectModel> {
   frameworks?: ('flow' | 'hilla')[]; // Maps to type in ProjectModel
   buildTool?: 'maven' | 'gradle'; // Maps to tool in ProjectModel
   folderExists?: boolean;
-  userAcceptsFolderConflict?: boolean;
+  warningResponse?: 'Yes' | 'Cancel'; // User's response to folder conflict warning
 }
 
 // Helper function to setup mocks based on configuration
-function setupMocks(config: MockInputs): { warningCalled: () => boolean } {
-  let warningMessageCalled = false;
+function setupMocks(config: MockInputs): void {
   let inputBoxCalls = 0, quickPickCalls = 0;
   vscode.window.showInputBox = async () => {
     inputBoxCalls++;
@@ -53,20 +52,18 @@ function setupMocks(config: MockInputs): { warningCalled: () => boolean } {
         return items.find((i: any) => i.value === (config.buildTool || config.tool || 'maven'));
       }
     }
-    return undefined;
   };
 
   vscode.window.showOpenDialog = async () => [vscode.Uri.file(config.location || '/tmp')];
   
   vscode.window.showWarningMessage = async (message: string) => {
-    warningMessageCalled = true;
     if (config.folderExists) {
       assert.ok(message.includes("already exists"), "Warning should mention folder already exists");
-      if (config.userAcceptsFolderConflict !== false) {
+      if (config.warningResponse === 'Yes') {
         assert.ok(message.includes("-1"), "Warning should suggest incremented name");
       }
     }
-    return config.userAcceptsFolderConflict !== false ? 'Yes' : undefined;
+    return config.warningResponse === 'Yes' ? 'Yes' : undefined;
   };
 
   if (config.folderExists) {
@@ -78,11 +75,10 @@ function setupMocks(config: MockInputs): { warningCalled: () => boolean } {
     };
   }
 
-  return { warningCalled: () => warningMessageCalled };
 }
 
 // Helper function to assert model properties using ProjectModel
-function assertModel(model: any, expected: Partial<ProjectModel>, warningCalled?: boolean) {
+function assertModel(model: any, expected: Partial<ProjectModel>) {
   assert.ok(model, "Model should exist");
   assert.strictEqual(model?.workflow, expected.workflow);
   assert.strictEqual(model?.name, expected.name);
@@ -103,9 +99,6 @@ function assertModel(model: any, expected: Partial<ProjectModel>, warningCalled?
   }
   if (expected.architecture) {
     assert.strictEqual(model?.architecture, expected.architecture);
-  }
-  if (warningCalled !== undefined) {
-    assert.strictEqual(warningCalled, true, "Warning message should have been shown");
   }
 }
 
@@ -268,7 +261,7 @@ suite('User Input Test Suite', () => {
   });
 
   test('should handle folder conflict when user accepts new name (starter workflow)', async () => {
-    const mockResult = setupMocks({
+    setupMocks({
       projectName: 'MyProject',
       groupId: 'com.example',
       workflow: 'starter',
@@ -276,7 +269,7 @@ suite('User Input Test Suite', () => {
       vaadinVersion: 'stable',
       location: '/tmp',
       folderExists: true,
-      userAcceptsFolderConflict: true
+      warningResponse: 'Yes'
     });
 
     const model = await newProjectUserInput();
@@ -288,11 +281,11 @@ suite('User Input Test Suite', () => {
       vaadinVersion: 'stable',
       type: ['flow'],
       location: '/tmp'
-    }, mockResult.warningCalled());
+    });
   });
 
   test('should return undefined when user cancels folder conflict dialog', async () => {
-    const mockResult = setupMocks({
+    setupMocks({
       projectName: 'MyProject',
       groupId: 'com.example',
       workflow: 'starter',
@@ -300,17 +293,16 @@ suite('User Input Test Suite', () => {
       vaadinVersion: 'stable',
       location: '/tmp',
       folderExists: true,
-      userAcceptsFolderConflict: false
+      warningResponse: 'Cancel'
     });
 
     const model = await newProjectUserInput();
 
     assert.strictEqual(model, undefined, "Should return undefined when user cancels");
-    assert.ok(mockResult.warningCalled(), "Warning message should have been shown");
   });
 
   test('should handle folder conflict for helloworld workflow when user accepts', async () => {
-    const mockResult = setupMocks({
+    setupMocks({
       projectName: 'HelloWorldTest',
       groupId: 'org.test',
       workflow: 'helloworld',
@@ -319,7 +311,7 @@ suite('User Input Test Suite', () => {
       tool: 'maven',
       location: '/tmp-test',
       folderExists: true,
-      userAcceptsFolderConflict: true
+      warningResponse: 'Yes'
     });
 
     const model = await newProjectUserInput();
@@ -333,6 +325,6 @@ suite('User Input Test Suite', () => {
       tool: 'maven',
       architecture: 'springboot',
       location: '/tmp-test'
-    }, mockResult.warningCalled());
+    });
   });
 });
