@@ -1,19 +1,57 @@
 import * as vscode from 'vscode';
 
 export type ProjectModel = {
+  workflow: 'starter' | 'helloworld';
   name: string;
   artifactId: string;
   groupId: string;
   location: string;
-  frameworks: string;
-  version: string;
+  type?: ('flow' | 'hilla')[];
+  // Walking Skeleton Project
+  vaadinVersion?: string;
+  // Hello World
+  language?: 'java' | 'kotlin';
+  tool?: 'maven' | 'gradle';
+  architecture?: 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
 };
 
 // based on https://github.com/marcushellberg/luoja
 export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
-  // Project name
+
+
+  // Select workflow (Walking Skeleton or Hello World)
+  const workflowPick = await vscode.window.showQuickPick([
+    {
+      label: 'Starter Project ', value: 'starter',
+      detail: 'Full-featured application skeleton with user management and security'
+    },
+    {
+      label: 'Hello World Project', value: 'helloworld',
+      detail: 'Minimal project to get started quickly'
+    },
+  ], { placeHolder: 'Project Type' });
+  if (!workflowPick) { return; }
+  const workflow = workflowPick.value as 'starter' | 'helloworld';
+
+  let model: ProjectModel | undefined = {
+    name: 'NewProject',
+    artifactId: 'new-project',
+    groupId: 'com.example.application',
+    workflow,
+    location: '',
+  };
+
+  // Select further options based on workflow
+  if (workflow === 'starter') {
+    model = await askForStarterOptions(model);
+  } else {
+    model = await askForHelloWorldOptions(model);
+  }
+  if (!model) { return; }
+
+  // Project Name
   const name = await vscode.window.showInputBox({
-    prompt: 'Project Name',
+    prompt: 'Project Name ',
     value: 'NewProject',
     validateInput: (v) => {
       if (!v.match(/^[A-Za-z0-9_.-]+$/)) {
@@ -21,49 +59,20 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
       }
     },
   });
-  if (!name) {
-    return;
-  }
+  if (!name) { return; }
   // Group ID
   const groupId = await vscode.window.showInputBox({
-      prompt: 'Group ID (Java package, e.g. com.example.application)',
-      value: 'com.example.application',
-      validateInput: (v) => {
-          if (!v.match(/^(?!\.)(?!.*\.\.)(?=.*\.)([A-Za-z0-9_.]+)(?<!\.)$/)) {
-              return 'Group ID must be a valid Java package name.';
-          }
-      },
-  });
-  if (!groupId) {
-      return;
-  }
-  // Example views
-  const exampleViews = await vscode.window.showQuickPick([
-    { 
-      id: 'flow',
-      label: 'Java UI with Vaadin Flow',
+    prompt: 'Group ID ',
+    value: 'com.example.application',
+    validateInput: (v) => {
+      if (!v.match(/^(?!\.)(?!.*\.\.)(?=.*\.)([A-Za-z0-9_.]+)(?<!\.)$/)) {
+        return 'Group ID must be a valid Java package name.';
+      }
     },
-    {
-      id: 'hilla',
-      label: 'React UI with Vaadin Hilla',
-    }
-    ], {
-    placeHolder: 'Include Vaadin application skeleton?',
-    canPickMany: true,
   });
-  if (!exampleViews) {
-    return;
-  }
+  if (!groupId) { return; }
 
-  // Version
-  const version = await vscode.window.showQuickPick(['Stable', 'Prerelease'], {
-    placeHolder: 'Select Vaadin version',
-  });
-  if (!version) {
-    return;
-  }
-
-  // Project location
+  // Folder selection
   const locationUri = await vscode.window.showOpenDialog({
     canSelectFiles: false,
     canSelectFolders: true,
@@ -72,18 +81,142 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
     openLabel: 'Create here',
   });
   const location = locationUri ? locationUri[0].fsPath : undefined;
-  if (!location) {
-    return;
+  if (!location) { return; }
+
+  // Check for folder conflict and propose new name if needed
+  const folderName = await computeFolderName(name.trim(), location);
+  if (!folderName) {return;}
+
+  // Return model with final values
+  return {
+    ...model,
+    name: folderName,
+    groupId: groupId.trim(),
+    artifactId: toArtifactId(folderName),
+    location,
+  };
+}
+
+async function askForStarterOptions(model: ProjectModel): Promise<ProjectModel | undefined> {
+  // Example views
+  const exampleViews = await vscode.window.showQuickPick([
+    {
+      id: 'flow',
+      label: 'Java UI with Vaadin Flow',
+    },
+    {
+      id: 'hilla',
+      label: 'React UI with Vaadin Hilla',
+    }
+  ], {
+    placeHolder: 'Include Vaadin application skeleton?',
+    canPickMany: true,
+  });
+  if (!exampleViews) { return; }
+
+  // Version
+  const vaadinVersion = await vscode.window.showQuickPick([
+    { label: 'Stable', value: 'stable' },
+    { label: 'Prerelease', value: 'pre' },
+  ], { placeHolder: 'Select Vaadin Version' });
+  if (!vaadinVersion) { return; }
+
+  return {
+    ...model,
+    workflow: 'starter',
+    vaadinVersion: vaadinVersion.value as 'stable' | 'pre',
+    type: exampleViews.map(item => item.id) as ('flow' | 'hilla')[],
+  };
+}
+
+async function askForHelloWorldOptions(model: ProjectModel): Promise<ProjectModel | undefined> {
+  // Set defaults for all options
+  let language: 'java' | 'kotlin' = 'java';
+  let buildTool: 'maven' | 'gradle' = 'maven';
+  let architecture: 'springboot' | 'quarkus' | 'jakartaee' | 'servlet' = 'springboot';
+
+  // Prompt for framework first
+  const frameworkPick = await vscode.window.showQuickPick([
+    { label: 'Flow / Java', value: 'flow' },
+    { label: 'Hilla / React', value: 'hilla' },
+  ], { placeHolder: 'Vaadin Framework to use' });
+  if (!frameworkPick) { return; }
+  const framework = frameworkPick.value as 'flow' | 'hilla';
+
+  if (framework === 'hilla') {
+    // Hilla: prompt for build tool
+    const buildToolPick = await vscode.window.showQuickPick([
+      { label: 'Maven', value: 'maven' },
+      { label: 'Gradle', value: 'gradle' },
+    ], { placeHolder: 'Build tool' });
+    if (!buildToolPick) { return; }
+    buildTool = buildToolPick.value as 'maven' | 'gradle';
+
+    // Hilla: language is always Java, architecture is always Spring Boot
+  } else {
+    // Flow: prompt for language
+    const languagePick = await vscode.window.showQuickPick([
+      { label: 'Java', value: 'java' },
+      { label: 'Kotlin', value: 'kotlin' },
+    ], { placeHolder: 'Language' });
+    if (!languagePick) { return; }
+    language = languagePick.value as 'java' | 'kotlin';
+
+    // Flow + Kotlin: build tool is always Maven, architecture is always Spring Boot (defaults)
+    if (language === 'java') {
+      // Flow + Java: prompt for build tool
+      const buildToolPick = await vscode.window.showQuickPick([
+        { label: 'Maven', value: 'maven' },
+        { label: 'Gradle', value: 'gradle' },
+      ], { placeHolder: 'Build tool' });
+      if (!buildToolPick) { return; }
+      buildTool = buildToolPick.value as 'maven' | 'gradle';
+
+      // Flow + Java + Gradle: architecture remains Spring Boot (default)
+      if (buildTool === 'maven') {
+        // Flow + Java + Maven: prompt for architecture
+        const architecturePick = await vscode.window.showQuickPick([
+          { label: 'Spring Boot', value: 'springboot' },
+          { label: 'Quarkus', value: 'quarkus' },
+          { label: 'Jakarta EE', value: 'jakartaee' },
+          { label: 'Servlet', value: 'servlet' },
+        ], { placeHolder: 'Architecture' });
+        if (!architecturePick) { return; }
+        architecture = architecturePick.value as 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
+      }
+    }
   }
 
   return {
-    name: name.trim(),
-    artifactId: toArtifactId(name),
-    groupId: groupId.trim(),
-    location,
-    frameworks: exampleViews.map(item => item.id).join(','),
-    version,
+    ...model,
+    workflow: 'helloworld',
+    type: [framework],
+    language,
+    tool: buildTool,
+    architecture,
   };
+}
+
+async function computeFolderName(baseName: string, location: string): Promise<string | undefined> {
+  const fs = require('fs');
+  const path = require('path');
+  let projectPath = path.join(location, baseName);
+  let counter = 1;
+  while (fs.existsSync(projectPath)) {
+    projectPath = path.join(location, `${baseName}-${counter}`);
+    counter++;
+  }
+  if (projectPath !== path.join(location, baseName)) {
+    const newName = path.basename(projectPath);
+    const answer = await vscode.window.showWarningMessage(
+      `The folder '${baseName}' already exists. The project will be created as '${newName}'. Do you want to continue?`,
+      { modal: true },
+      'Yes'
+    );
+    if (answer !== 'Yes') { return; }
+    return newName;
+  }
+  return baseName;
 }
 
 function toArtifactId(name: string): string {

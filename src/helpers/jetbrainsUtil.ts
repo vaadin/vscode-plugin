@@ -69,7 +69,7 @@ class JetbrainsRuntimeUtil {
     const lines = body.split('\n');
     for (const line of lines) {
       const parts = line.split('|');
-      if (parts.length < 4) continue;
+      if (parts.length < 4) {continue;}
       const arch = parts[1].trim();
       const sdkType = parts[2].replace('*', '').trim();
       const url = parts[3].replace(/\[.*]/, '').replace(/[()]/g, '').trim();

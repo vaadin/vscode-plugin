@@ -49,35 +49,70 @@ export async function downloadAndExtract(model: ProjectModel) {
   const response = await axios.get(url, { responseType: 'arraybuffer' });
   const zipBuffer = Buffer.from(response.data, 'binary');
 
-  const generatedProjectPath = path.join(model.location, model.artifactId);
-  const projectPath = path.join(model.location, model.name);
-
+  // Extract the zip to a temporary folder
+  const tmp = require('os').tmpdir();
+  const tempExtractPath = path.join(tmp, 'vaadin-tmp-' + Date.now());
+  fs.mkdirSync(tempExtractPath);
   const zip = new AdmZip(zipBuffer);
-  zip.extractAllTo(model.location, true, true);
+  zip.extractAllTo(tempExtractPath, true, true);
 
-  // use project name from user input for project location
-  fs.renameSync(generatedProjectPath, projectPath);
+  // Find the root folder of the extracted project
+  const extractedFolders = fs.readdirSync(tempExtractPath).filter(f => fs.statSync(path.join(tempExtractPath, f)).isDirectory());
+  if (extractedFolders.length === 0) {
+    throw new Error('No project folder found in the downloaded zip');
+  }
+  const extractedRoot = path.join(tempExtractPath, extractedFolders[0]);
+
+  const projectPath = path.join(model.location, model.name);
+  // Try to move a folder with renameSync, fallback to cpSync+rmSync if different devices in windows
+  console.log(`Renaming: ${extractedRoot} -> ${projectPath}`);
+  try {
+    fs.renameSync(extractedRoot, projectPath);
+  } catch (err: any) {
+    fs.cpSync(extractedRoot, projectPath, { recursive: true });
+    fs.rmSync(extractedRoot, { recursive: true, force: true });
+  }
+
+  // Clean up temporary folder
+  fs.rmSync(tempExtractPath, { recursive: true, force: true });
 
   console.log('Vaadin project created at ' + projectPath);
 
-  // Open the newly created project folder in a new VS Code window
-  const uri = vscode.Uri.file(projectPath);
-  vscode.commands.executeCommand('vscode.openFolder', uri, true);
+  // Open the newly created project folder in a new VS Code window, unless running in test mode
+  if (process.env.NODE_ENV !== 'test' && process.env.VSCODE_TEST !== 'true') {
+    const uri = vscode.Uri.file(projectPath);
+    vscode.commands.executeCommand('vscode.openFolder', uri, true);
+  }
 }
 
 function getDownloadUrl(model: ProjectModel) {
-  let frameworks = model.frameworks === '' ? 'empty' : model.frameworks;
-  let platformVersion = model.version === 'Stable' ? 'stable' : 'pre';
-
-  let params = new URLSearchParams({
-    frameworks,
-    platformVersion,
-    artifactId: model.artifactId,
-    groupId: model.groupId,
-    ref: 'vscode'
-  }).toString();
-
-  return `https://start.vaadin.com/skeleton?${params}`;
+    if (model.workflow === 'starter') {
+      // Walking Skeleton Project
+      const params = new URLSearchParams({
+        name: model.name,
+        artifactId: model.artifactId,
+        groupId: model.groupId,
+        platformVersion: model.vaadinVersion || 'stable',
+        download: 'true',
+        ref: 'vscode-plugin',
+        frameworks: model.type?.length ? model.type.join(',') : ''
+      }).toString();
+      return `https://start.vaadin.com/skeleton?${params}`;
+    } else {
+      // Hello World Project
+      const params = new URLSearchParams({
+        name: model.name,
+        artifactId: model.artifactId,
+        groupId: model.groupId,
+        framework: model.type?.length ? model.type[0] : 'flow',
+        language: model.language || 'java',
+        buildtool: model.tool || 'maven',
+        stack: model.architecture || 'springboot',
+        download: 'true',
+        ref: 'vscode-plugin',
+      }).toString();
+      return `https://start.vaadin.com/helloworld?${params}`;
+    }
 }
 
 /**
