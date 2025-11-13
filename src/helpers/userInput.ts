@@ -6,7 +6,7 @@ export type ProjectModel = {
   artifactId: string;
   groupId: string;
   location: string;
-  type?: ('flow' | 'hilla')[];
+  type?: 'flow'[];
   // Walking Skeleton Project
   vaadinVersion?: string;
   // Hello World
@@ -23,7 +23,7 @@ export async function newProjectUserInput(): Promise<ProjectModel | undefined> {
   const workflowPick = await vscode.window.showQuickPick([
     {
       label: 'Starter Project ', value: 'starter',
-      detail: 'Full-featured application skeleton with user management and security'
+      detail: 'Quickly start local application development using a starter project (Walking Skeleton) based on Maven, Spring Boot, and JPA with an H2 database.'
     },
     {
       label: 'Hello World Project', value: 'helloworld',
@@ -102,14 +102,11 @@ async function askForStarterOptions(model: ProjectModel): Promise<ProjectModel |
   const exampleViews = await vscode.window.showQuickPick([
     {
       id: 'flow',
-      label: 'Java UI with Vaadin Flow',
-    },
-    {
-      id: 'hilla',
-      label: 'React UI with Vaadin Hilla',
+      label: 'Include sample view',
+      detail: 'A sample view built fully in Java, front to back.',
     }
   ], {
-    placeHolder: 'Include Vaadin application skeleton?',
+    placeHolder: 'Include sample view?',
     canPickMany: true,
   });
   if (!exampleViews) { return; }
@@ -125,7 +122,7 @@ async function askForStarterOptions(model: ProjectModel): Promise<ProjectModel |
     ...model,
     workflow: 'starter',
     vaadinVersion: vaadinVersion.value as 'stable' | 'pre',
-    type: exampleViews.map(item => item.id) as ('flow' | 'hilla')[],
+    type: exampleViews.map(item => item.id) as 'flow'[],
   };
 }
 
@@ -135,16 +132,17 @@ async function askForHelloWorldOptions(model: ProjectModel): Promise<ProjectMode
   let buildTool: 'maven' | 'gradle' = 'maven';
   let architecture: 'springboot' | 'quarkus' | 'jakartaee' | 'servlet' = 'springboot';
 
-  // Prompt for framework first
-  const frameworkPick = await vscode.window.showQuickPick([
-    { label: 'Flow / Java', value: 'flow' },
-    { label: 'Hilla / React', value: 'hilla' },
-  ], { placeHolder: 'Vaadin Framework to use' });
-  if (!frameworkPick) { return; }
-  const framework = frameworkPick.value as 'flow' | 'hilla';
+  // Prompt for language
+  const languagePick = await vscode.window.showQuickPick([
+    { label: 'Java', value: 'java' },
+    { label: 'Kotlin', value: 'kotlin' },
+  ], { placeHolder: 'Language' });
+  if (!languagePick) { return; }
+  language = languagePick.value as 'java' | 'kotlin';
 
-  if (framework === 'hilla') {
-    // Hilla: prompt for build tool
+  // Flow + Kotlin: build tool is always Maven, architecture is always Spring Boot (defaults)
+  if (language === 'java') {
+    // Flow + Java: prompt for build tool
     const buildToolPick = await vscode.window.showQuickPick([
       { label: 'Maven', value: 'maven' },
       { label: 'Gradle', value: 'gradle' },
@@ -152,45 +150,24 @@ async function askForHelloWorldOptions(model: ProjectModel): Promise<ProjectMode
     if (!buildToolPick) { return; }
     buildTool = buildToolPick.value as 'maven' | 'gradle';
 
-    // Hilla: language is always Java, architecture is always Spring Boot
-  } else {
-    // Flow: prompt for language
-    const languagePick = await vscode.window.showQuickPick([
-      { label: 'Java', value: 'java' },
-      { label: 'Kotlin', value: 'kotlin' },
-    ], { placeHolder: 'Language' });
-    if (!languagePick) { return; }
-    language = languagePick.value as 'java' | 'kotlin';
-
-    // Flow + Kotlin: build tool is always Maven, architecture is always Spring Boot (defaults)
-    if (language === 'java') {
-      // Flow + Java: prompt for build tool
-      const buildToolPick = await vscode.window.showQuickPick([
-        { label: 'Maven', value: 'maven' },
-        { label: 'Gradle', value: 'gradle' },
-      ], { placeHolder: 'Build tool' });
-      if (!buildToolPick) { return; }
-      buildTool = buildToolPick.value as 'maven' | 'gradle';
-
-      // Flow + Java + Gradle: architecture remains Spring Boot (default)
-      if (buildTool === 'maven') {
-        // Flow + Java + Maven: prompt for architecture
-        const architecturePick = await vscode.window.showQuickPick([
-          { label: 'Spring Boot', value: 'springboot' },
-          { label: 'Quarkus', value: 'quarkus' },
-          { label: 'Jakarta EE', value: 'jakartaee' },
-          { label: 'Servlet', value: 'servlet' },
-        ], { placeHolder: 'Architecture' });
-        if (!architecturePick) { return; }
-        architecture = architecturePick.value as 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
-      }
+    // Flow + Java + Gradle: architecture remains Spring Boot (default)
+    if (buildTool === 'maven') {
+      // Flow + Java + Maven: prompt for architecture
+      const architecturePick = await vscode.window.showQuickPick([
+        { label: 'Spring Boot', value: 'springboot' },
+        { label: 'Quarkus', value: 'quarkus' },
+        { label: 'Jakarta EE', value: 'jakartaee' },
+        { label: 'Servlet', value: 'servlet' },
+      ], { placeHolder: 'Architecture' });
+      if (!architecturePick) { return; }
+      architecture = architecturePick.value as 'springboot' | 'quarkus' | 'jakartaee' | 'servlet';
     }
   }
 
   return {
     ...model,
     workflow: 'helloworld',
-    type: [framework],
+    type: ['flow'],
     language,
     tool: buildTool,
     architecture,
