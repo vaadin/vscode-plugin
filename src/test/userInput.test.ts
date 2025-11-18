@@ -9,7 +9,7 @@ const fs = require('fs');
 // Helper types for test configuration based on ProjectModel
 interface MockInputs extends Partial<ProjectModel> {
   projectName: string; // Maps to name in ProjectModel
-  frameworks?: ('flow' | 'hilla')[]; // Maps to type in ProjectModel
+  frameworks?: 'flow'[]; // Maps to type in ProjectModel
   buildTool?: 'maven' | 'gradle'; // Maps to tool in ProjectModel
   folderExists?: boolean;
   warningResponse?: 'Yes' | 'Cancel'; // User's response to folder conflict warning
@@ -36,20 +36,16 @@ function setupMocks(config: MockInputs): void {
       }
     } else if (config.workflow === 'helloworld') {
       if (quickPickCalls === 2) {
-        const framework = (config.frameworks || config.type)?.[0] || 'flow';
-        return items.find((i: any) => i.value === framework);
-      }
-      if (quickPickCalls === 3) {
-        // For hilla framework, this is the build tool selection
-        if ((config.frameworks || config.type)?.[0] === 'hilla') {
-          return items.find((i: any) => i.value === (config.buildTool || config.tool || 'maven'));
-        }
-        // For flow framework, this is the language selection
+        // Language selection
         return items.find((i: any) => i.value === (config.language || 'java'));
       }
-      if (quickPickCalls === 4) {
-        // Only for flow + java, this is the build tool selection
+      if (quickPickCalls === 3) {
+        // Build tool selection (only for java)
         return items.find((i: any) => i.value === (config.buildTool || config.tool || 'maven'));
+      }
+      if (quickPickCalls === 4) {
+        // Architecture selection (only for flow + java + maven)
+        return items.find((i: any) => i.value === (config.architecture || 'springboot'));
       }
     }
   };
@@ -146,27 +142,6 @@ suite('User Input Test Suite', () => {
     });
   });
 
-  test('should return correct model for starter workflow (flow+hilla)', async () => {
-    setupMocks({
-      projectName: 'MyProjectFH',
-      groupId: 'com.example.fh',
-      workflow: 'starter',
-      type: ['flow', 'hilla'],
-      vaadinVersion: 'stable',
-      location: '/tmp-fh'
-    });
-
-    const model = await newProjectUserInput();
-    assertModel(model, {
-      workflow: 'starter',
-      name: 'MyProjectFH',
-      groupId: 'com.example.fh',
-      vaadinVersion: 'stable',
-      type: ['flow', 'hilla'],
-      location: '/tmp-fh'
-    });
-  });
-
   test('should return correct model for starter workflow (none)', async () => {
     setupMocks({
       projectName: 'MyProjectNone',
@@ -185,30 +160,6 @@ suite('User Input Test Suite', () => {
       vaadinVersion: 'stable',
       type: [],
       location: '/tmp-none'
-    });
-  });
-
-  test('should return correct model for helloworld workflow (Hilla)', async () => {
-    setupMocks({
-      projectName: 'HelloWorldHilla',
-      groupId: 'org.hilla',
-      workflow: 'helloworld',
-      type: ['hilla'],
-      language: 'java',
-      tool: 'maven',
-      location: '/tmp-hilla'
-    });
-
-    const model = await newProjectUserInput();
-    assertModel(model, {
-      workflow: 'helloworld',
-      name: 'HelloWorldHilla',
-      groupId: 'org.hilla',
-      type: ['hilla'],
-      language: 'java',
-      tool: 'maven',
-      architecture: 'springboot',
-      location: '/tmp-hilla'
     });
   });
 
@@ -306,7 +257,7 @@ suite('User Input Test Suite', () => {
       projectName: 'HelloWorldTest',
       groupId: 'org.test',
       workflow: 'helloworld',
-      type: ['hilla'],
+      type: ['flow'],
       language: 'java',
       tool: 'maven',
       location: '/tmp-test',
@@ -320,7 +271,7 @@ suite('User Input Test Suite', () => {
       workflow: 'helloworld',
       name: 'HelloWorldTest-1', // Should be incremented
       groupId: 'org.test',
-      type: ['hilla'],
+      type: ['flow'],
       language: 'java',
       tool: 'maven',
       architecture: 'springboot',
