@@ -18,6 +18,6 @@ Use `Vaadin: Setup Hotswap Agent` to prepare your development environment to wor
 
 Extensions improves user experience while working with Vaadin Copilot. File write operations are faster, changes are immediately reflected in your project. You can undo your changes directly from Vaadin Copilot.
 
-## Debug Extension
+## Debugging Extension
 
-Just import the project in VS Code and run the extension on "Run -> Start Debugging". VSCode will automatically open a new instance of VSCode with the extension snapshot version. 
+Import the project in VS Code and run using "Run -> Start Debugging". New instance of VS Code, with already installed snapshot of developed extension, is run automatically.  
