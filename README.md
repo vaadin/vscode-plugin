@@ -4,7 +4,7 @@ Official Vaadin extension for Visual Studio Code. Improves user experience while
 
 ## New Project Wizard
 
-You can create new Vaadin projects using `Vaadin: Generate new Vaadin project` command.
+You can create new Vaadin projects using `Vaadin: Generate new Vaadin project` command (CMD + SHIFT + P / CTRL + SHIFT + P).
 
 ![new-project-2](https://github.com/user-attachments/assets/6493aad1-15b5-47e4-8062-068793073a50)
 
@@ -17,3 +17,7 @@ Use `Vaadin: Setup Hotswap Agent` to prepare your development environment to wor
 ## Vaadin Copilot Integration
 
 Extensions improves user experience while working with Vaadin Copilot. File write operations are faster, changes are immediately reflected in your project. You can undo your changes directly from Vaadin Copilot.
+
+## Debugging Extension
+
+Import the project in VS Code and run using "Run -> Start Debugging". New instance of VS Code, with already installed snapshot of developed extension, is run automatically.  
