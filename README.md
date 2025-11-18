@@ -4,7 +4,7 @@ Official Vaadin extension for Visual Studio Code. Improves user experience while
 
 ## New Project Wizard
 
-You can create new Vaadin projects using `Vaadin: Generate new Vaadin project` command (CMD + SHIFT + P / CTRL + SHIFT + P). Choose if you want to add example Flow or Hilla views, enable authentication and use stable or prerelease.
+You can create new Vaadin projects using `Vaadin: Generate new Vaadin project` command (CMD + SHIFT + P / CTRL + SHIFT + P).
 
 ![new-project-2](https://github.com/user-attachments/assets/6493aad1-15b5-47e4-8062-068793073a50)
 
