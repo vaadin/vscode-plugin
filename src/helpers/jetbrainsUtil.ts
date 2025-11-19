@@ -97,7 +97,13 @@ class JetbrainsRuntimeUtil {
           const downloadUrl = await JetbrainsRuntimeUtil.findJBRDownloadUrl(latestRelease);
 
           if (!downloadUrl) {
-            vscode.window.showErrorMessage('No suitable JetBrains Runtime found.');
+            const action = await vscode.window.showErrorMessage(
+              'No suitable JetBrains Runtime found.',
+              'Retry'
+            );
+            if (action === 'Retry') {
+              return await JetbrainsRuntimeUtil.downloadLatestJBR(quiet);
+            }
             return;
           }
 
@@ -127,7 +133,13 @@ class JetbrainsRuntimeUtil {
 
           return extractPath;
         } catch (error) {
-          vscode.window.showErrorMessage(`Error downloading JetBrains Runtime: ${error}`);
+          const action = await vscode.window.showErrorMessage(
+            `Error downloading JetBrains Runtime: ${error}`,
+            'Retry'
+          );
+          if (action === 'Retry') {
+            return await JetbrainsRuntimeUtil.downloadLatestJBR(quiet);
+          }
         }
       },
     );
