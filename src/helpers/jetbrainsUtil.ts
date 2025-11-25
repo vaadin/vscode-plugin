@@ -85,6 +85,22 @@ class JetbrainsRuntimeUtil {
    * Downloads the latest JBR version and saves it to the workspace.
    */
   public static async downloadLatestJBR(quiet: boolean = false): Promise<string | undefined> {
+    while (true) {
+      try {
+        return await JetbrainsRuntimeUtil.performJBRDownload(quiet);
+      } catch (error) {
+        const shouldRetry = await JetbrainsRuntimeUtil.offerRetry(error);
+        if (!shouldRetry) {
+          return;
+        }
+      }
+    }
+  }
+
+  /**
+   * Performs a single attempt to download the latest JBR version.
+   */
+  private static async performJBRDownload(quiet: boolean): Promise<string | undefined> {
     return vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -92,45 +108,63 @@ class JetbrainsRuntimeUtil {
         cancellable: true,
       },
       async (progress, token) => {
-        try {
-          const latestRelease = await JetbrainsRuntimeUtil.findLatestJBRRelease();
-          const downloadUrl = await JetbrainsRuntimeUtil.findJBRDownloadUrl(latestRelease);
+        const latestRelease = await JetbrainsRuntimeUtil.findLatestJBRRelease();
+        const downloadUrl = await JetbrainsRuntimeUtil.findJBRDownloadUrl(latestRelease);
 
-          if (!downloadUrl) {
-            vscode.window.showErrorMessage('No suitable JetBrains Runtime found.');
-            return;
-          }
-
-          const filename = path.basename(downloadUrl);
-          const vaadinHomeFolder = resolveVaadinHomeDirectory();
-          const downloadPath = path.join(vaadinHomeFolder, filename);
-          const jdksPath = path.join(vaadinHomeFolder, 'jdk');
-          const extractPath = path.join(jdksPath, filename.replace(TAR_GZ, ''));
-
-          if (!fs.existsSync(jdksPath)) {
-            fs.mkdirSync(jdksPath, { recursive: true });
-          }
-
-          if (fs.existsSync(extractPath)) {
-            if (!quiet) {
-              vscode.window.showInformationMessage(`JetBrains Runtime already exists at ${extractPath}`);
-            }
-            return extractPath;
-          }
-
-          await JetbrainsRuntimeUtil.downloadFile(downloadUrl, downloadPath, progress, token);
-          await JetbrainsRuntimeUtil.extractArchive(downloadPath, extractPath);
-
-          if (!quiet) {
-            vscode.window.showInformationMessage(`JetBrains Runtime downloaded to ${extractPath}`);
-          }
-
-          return extractPath;
-        } catch (error) {
-          vscode.window.showErrorMessage(`Error downloading JetBrains Runtime: ${error}`);
+        if (!downloadUrl) {
+          vscode.window.showErrorMessage('No suitable JetBrains Runtime found.');
+          return;
         }
+
+        const filename = path.basename(downloadUrl);
+        const vaadinHomeFolder = resolveVaadinHomeDirectory();
+        const downloadPath = path.join(vaadinHomeFolder, filename);
+        const jdksPath = path.join(vaadinHomeFolder, 'jdk');
+        const extractPath = path.join(jdksPath, filename.replace(TAR_GZ, ''));
+
+        if (!fs.existsSync(jdksPath)) {
+          fs.mkdirSync(jdksPath, { recursive: true });
+        }
+
+        if (fs.existsSync(extractPath)) {
+          if (!quiet) {
+            vscode.window.showInformationMessage(`JetBrains Runtime already exists at ${extractPath}`);
+          }
+          return extractPath;
+        }
+
+        await JetbrainsRuntimeUtil.downloadFile(downloadUrl, downloadPath, progress, token);
+        await JetbrainsRuntimeUtil.extractArchive(downloadPath, extractPath);
+
+        if (!quiet) {
+          vscode.window.showInformationMessage(`JetBrains Runtime downloaded to ${extractPath}`);
+        }
+
+        return extractPath;
       },
     );
+  }
+
+  /**
+   * Shows an error message with a retry option when the download fails.
+   */
+  private static async offerRetry(error: unknown): Promise<boolean> {
+    const retry = 'Retry';
+    const message = `Error downloading JetBrains Runtime: ${JetbrainsRuntimeUtil.formatError(error)}`;
+    const action = await vscode.window.showErrorMessage(message, retry);
+    return action === retry;
+  }
+
+  private static formatError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'string') {
+      return error;
+    }
+
+    return 'Unknown error';
   }
 
   /**
