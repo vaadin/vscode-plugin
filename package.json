@@ -80,6 +80,22 @@
           "fontCharacter": "\\e800"
         }
       }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "vaadin.debugUsingHotswap",
+          "group": "1_javaactions@99",
+          "when": "resourceLangId == java && resourceExtname == .java"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "vaadin.debugUsingHotswap",
+          "group": "javadebug@99",
+          "when": "editorLangId == java && resourceExtname == .java"
+        }
+      ]
     }
   },
   "dependencies": {
