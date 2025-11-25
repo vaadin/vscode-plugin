@@ -82,6 +82,13 @@
       }
     },
     "menus": {
+      "editor/title/run": [
+        {
+          "command": "vaadin.debugUsingHotswap",
+          "group": "1_javadebug@30",
+          "when": "resourceExtname == .java"
+        }
+      ],
       "explorer/context": [
         {
           "command": "vaadin.debugUsingHotswap",
