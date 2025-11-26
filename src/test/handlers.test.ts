@@ -5,41 +5,52 @@ import * as vscode from 'vscode';
 import { writeFileHandler } from '../helpers/handlers';
 
 suite('Handlers writeFileHandler unsaved changes', () => {
-  const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath || __dirname;
-  const testDir = path.join(workspaceRoot, 'tmp-handler-tests');
+  const testDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vaadin-handler-tests-'));
+  const originalWorkspaceFolders = vscode.workspace.workspaceFolders;
   let originalWarning: typeof vscode.window.showWarningMessage;
-  let addedWorkspaceFolder = false;
   const createdFiles: string[] = [];
 
-  setup(async () => {
+  suiteSetup(async () => {
+    const added = vscode.workspace.updateWorkspaceFolders(0, originalWorkspaceFolders?.length ?? 0, {
+      uri: vscode.Uri.file(testDir),
+      name: 'handler-tests',
+    });
+    if (!added) {
+      throw new Error('Failed to add handler test workspace folder');
+    }
+    // allow VS Code to register the new workspace folder
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
+  suiteTeardown(() => {
+    vscode.workspace.updateWorkspaceFolders(
+      0,
+      vscode.workspace.workspaceFolders?.length ?? 0,
+      ...(originalWorkspaceFolders ?? []),
+    );
+    if (fs.existsSync(testDir)) {
+      fs.rmSync(testDir, { recursive: true, force: true });
+    }
+  });
+
+  setup(() => {
     originalWarning = vscode.window.showWarningMessage;
     fs.mkdirSync(testDir, { recursive: true });
 
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders[0].uri.fsPath !== testDir) {
-      const added = vscode.workspace.updateWorkspaceFolders(0, 0, {
-        uri: vscode.Uri.file(testDir),
-        name: 'handler-tests',
-      });
-      addedWorkspaceFolder = added;
-      // allow VS Code to register the new workspace folder
-      await new Promise((resolve) => setTimeout(resolve, 50));
+    // Clean any files left from previous test run
+    for (const entry of fs.readdirSync(testDir)) {
+      fs.rmSync(path.join(testDir, entry), { recursive: true, force: true });
     }
   });
 
   teardown(() => {
     vscode.window.showWarningMessage = originalWarning;
-    if (addedWorkspaceFolder) {
-      vscode.workspace.updateWorkspaceFolders(0, 1);
-      addedWorkspaceFolder = false;
-    }
     createdFiles.forEach((file) => {
       if (fs.existsSync(file)) {
         fs.rmSync(file, { force: true });
       }
     });
-    if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true, force: true });
-    }
+    createdFiles.splice(0, createdFiles.length);
   });
 
   async function createDirtyDocument(fileName: string) {
@@ -66,6 +77,17 @@ suite('Handlers writeFileHandler unsaved changes', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     assert.fail(`Timed out waiting for ${filePath} to contain expected content`);
+  }
+
+  async function waitForNotDirty(doc: vscode.TextDocument) {
+    for (let i = 0; i < 40; i++) {
+      const refreshed = await vscode.workspace.openTextDocument(doc.uri);
+      if (!refreshed.isDirty) {
+        return refreshed;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    assert.fail(`Document ${doc.uri.fsPath} stayed dirty longer than expected`);
   }
 
   test('does not overwrite when user cancels dirty file prompt', async () => {
@@ -96,7 +118,7 @@ suite('Handlers writeFileHandler unsaved changes', () => {
     await writeFileHandler({ file: filePath, undoLabel: 'test', content: 'new content' });
     await waitForFileContent(filePath, 'new content');
 
-    const refreshed = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
+    const refreshed = await waitForNotDirty(await vscode.workspace.openTextDocument(vscode.Uri.file(filePath)));
     assert.ok(promptShown, 'Prompt should be shown for dirty file');
     assert.strictEqual(refreshed.getText(), 'new content', 'File should contain handler content after save');
     assert.strictEqual(refreshed.isDirty, false, 'Document should be clean after handler finishes');
