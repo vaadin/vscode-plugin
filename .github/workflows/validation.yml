@@ -21,7 +21,10 @@ jobs:
       with:
         node-version: 18.x
     - run: npm install
-    - run: xvfb-run -a npm test
+    - name: Run tests (Linux)
+      run: |
+        export DBUS_SESSION_BUS_ADDRESS=/dev/null
+        xvfb-run -a npm test
       if: runner.os == 'Linux'
     - run: npm test
       if: runner.os != 'Linux'
