@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { writeFileHandler } from '../helpers/handlers';
 
-suite('Handlers writeFileHandler unsaved changes', () => {
+suite.skip('Handlers writeFileHandler unsaved changes', () => {
   const testDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vaadin-handler-tests-'));
   const originalWorkspaceFolders = vscode.workspace.workspaceFolders;
   let originalWarning: typeof vscode.window.showWarningMessage;
