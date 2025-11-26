@@ -21,9 +21,7 @@ jobs:
       with:
         node-version: 18.x
     - run: npm install
-    - name: Run tests (Linux)
-      run: |
-        xvfb-run -a dbus-run-session -- npm test
+    - run: xvfb-run -a npm test
       if: runner.os == 'Linux'
     - run: npm test
       if: runner.os != 'Linux'
