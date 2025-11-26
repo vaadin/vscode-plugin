@@ -37,28 +37,28 @@ class JavaRuntimeQuickPickItem implements QuickPickItem {
   detail?: string | undefined;
 }
 
-export async function setupHotswap(context: ExtensionContext, quiet: boolean = false) {
+export async function setupHotswap(context: ExtensionContext, quiet: boolean = false): Promise<boolean> {
   const javaHome = await setupJavaHome(quiet);
   if (!javaHome) {
     showCancellationWarning();
-    return;
+    return false;
   }
 
   getJavaConfiguration().update(JAVA_DEBUG_HOTCODE_REPLACE, 'auto');
 
   if (!(await installHotswapJar(context, javaHome))) {
     showCancellationWarning();
-    return;
+    return false;
   }
 
   if (!(await updateLaunchConfiguration(javaHome))) {
     showCancellationWarning();
-    return;
+    return false;
   }
 
   if (quiet) {
     window.showInformationMessage('hotswap-agent.jar setup finished');
-    return;
+    return true;
   }
 
   window.showInformationMessage('hotswap-agent.jar installed', LAUNCH_CONFIGURATION_NAME).then((action) => {
@@ -66,6 +66,8 @@ export async function setupHotswap(context: ExtensionContext, quiet: boolean = f
       commands.executeCommand('vaadin.debugUsingHotswap');
     }
   });
+
+  return true;
 }
 
 export async function debugUsingHotswap(context: ExtensionContext, autoSetup: boolean = false) {
@@ -84,7 +86,10 @@ export async function debugUsingHotswap(context: ExtensionContext, autoSetup: bo
     // configuration does not exist
 
     if (autoSetup) {
-      await setupHotswap(context, true);
+      const setupDone = await setupHotswap(context, true);
+      if (!setupDone) {
+        return;
+      }
     } else {
       window
         .showWarningMessage('Hotswap not configured, please run Setup Hotswap Agent first.', 'Run Setup Hotswap Agent')
