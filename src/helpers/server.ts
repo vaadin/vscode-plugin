@@ -55,9 +55,9 @@ function handleClientData(request: CommandRequest): boolean {
     case Handlers.REDO:
       undoRedoHandler(request.data, 'redo');
       return true;
-    // case Handlers.SHOW_IN_IDE:
-    // showInIdeHandler(request.data);
-    // return true;
+    case Handlers.SHOW_IN_IDE:
+      showInIdeHandler(request.data);
+      return true;
     case Handlers.REFRESH:
       refresh();
       return true;
