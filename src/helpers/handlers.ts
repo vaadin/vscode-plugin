@@ -38,6 +38,23 @@ type ShowInIdeCommandData = {
 
 export async function writeFileHandler(data: WriteCommandData) {
   if (isFileInsideProject(data.file)) {
+    const uri = Uri.file(data.file);
+    const openDocument = vscode.workspace.textDocuments.find((doc) => doc.uri.fsPath === data.file);
+
+    if (openDocument?.isDirty) {
+      const applyWithoutSaving = { title: 'Apply without saving' };
+      const choice = await vscode.window.showWarningMessage(
+        `The file ${uri.fsPath} has unsaved changes. Apply Vaadin Copilot updates without saving them?`,
+        { modal: true },
+        applyWithoutSaving,
+      );
+
+      if (!choice) {
+        console.log('Aborting update of ' + uri + ' due to unsaved changes');
+        return;
+      }
+    }
+
     const workspaceEdit = new vscode.WorkspaceEdit();
 
     const metadata = {
@@ -45,7 +62,6 @@ export async function writeFileHandler(data: WriteCommandData) {
       needsConfirmation: false,
     } as vscode.WorkspaceEditEntryMetadata;
 
-    const uri = Uri.file(data.file);
     const content = new TextEncoder().encode(data.content);
 
     if (fs.existsSync(data.file)) {
