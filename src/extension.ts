@@ -6,7 +6,7 @@ import { undoManager } from './helpers/undoManager';
 import { deleteProperties } from './helpers/properties';
 import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 import { DebugCodeLensProvider } from './debug-using-hotswapagent';
-import { JAVA_DEBUG_CONFIGURATION, JAVA_LANGID } from './helpers/javaUtil';
+import { getJavaExtensionId, JAVA_DEBUG_CONFIGURATION, JAVA_LANGID, ORACLE_JAVA_EXTENSION_ID } from './helpers/javaUtil';
 import { trackPluginInitialized } from './helpers/ampliUtil';
 
 const ENABLE_CODE_LENS_VARIABLE = 'enableRunDebugCodeLens';
@@ -41,7 +41,9 @@ export async function activate(context: vscode.ExtensionContext) {
   const configuration = vscode.workspace.getConfiguration(JAVA_DEBUG_CONFIGURATION);
   const isCodeLensEnabled = configuration.get<boolean>(ENABLE_CODE_LENS_VARIABLE);
 
-  if (isCodeLensEnabled) {
+  const javaExtensionId = getJavaExtensionId();
+  // Oracle extension does not expose the Red Hat setting, so default to showing the lens when it is installed.
+  if (javaExtensionId && (isCodeLensEnabled ?? javaExtensionId === ORACLE_JAVA_EXTENSION_ID)) {
     const lensProvider = vscode.languages.registerCodeLensProvider(JAVA_LANGID, new DebugCodeLensProvider());
     context.subscriptions.push(lensProvider);
   }
