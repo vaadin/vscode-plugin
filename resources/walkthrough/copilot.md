@@ -1,0 +1,3 @@
+- Start the integration with [Vaadin: Start Vaadin Copilot integration](command:vaadin.start); the status bar server icon confirms the local endpoint is running.
+- Keep Vaadin Copilot connected to push file writes, open files in the IDE, and request undo/redo operations directly in VS Code.
+- If you restart VS Code, run the command again so Copilot can continue sending edits to your workspace.

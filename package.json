@@ -103,7 +103,59 @@
           "when": "editorLangId == java && resourceExtname == .java"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "vaadin.walkthrough",
+        "title": "Get started with Vaadin",
+        "description": "Create a Vaadin project, enable Hotswap Agent, and connect Vaadin Copilot.",
+        "primary": true,
+        "steps": [
+          {
+            "id": "vaadin.walkthrough.createProject",
+            "title": "Create a Vaadin project",
+            "description": "Use the wizard to scaffold a new Vaadin project without leaving VS Code.",
+            "media": {
+              "markdown": "resources/walkthrough/create-project.md"
+            },
+            "completionEvents": [
+              "onCommand:vaadin.newProject"
+            ]
+          },
+          {
+            "id": "vaadin.walkthrough.hotswap",
+            "title": "Enable Hotswap Agent",
+            "description": "Install the Hotswap Agent runtime to debug with fast reloads.",
+            "media": {
+              "markdown": "resources/walkthrough/hotswap.md"
+            },
+            "completionEvents": [
+              "onCommand:vaadin.setupHotswap",
+              "onCommand:vaadin.debugUsingHotswap"
+            ]
+          },
+          {
+            "id": "vaadin.walkthrough.copilot",
+            "title": "Start Vaadin Copilot integration",
+            "description": "Expose the local endpoint that lets Vaadin Copilot write files and undo changes.",
+            "media": {
+              "markdown": "resources/walkthrough/copilot.md"
+            },
+            "completionEvents": [
+              "onCommand:vaadin.start"
+            ]
+          },
+          {
+            "id": "vaadin.walkthrough.learnMore",
+            "title": "Learn more about Vaadin",
+            "description": "Explore documentation, community resources, and share ideas for the VS Code plugin.",
+            "media": {
+              "markdown": "resources/walkthrough/learn-more.md"
+            }
+          }
+        ]
+      }
+    ]
   },
   "dependencies": {
     "@amplitude/analytics-node": "^1.3.8",

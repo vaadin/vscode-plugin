@@ -1,0 +1,4 @@
+- Browse the [Vaadin website](https://vaadin.com) to see what the platform offers.
+- Read the [Vaadin Docs](https://vaadin.com/docs/latest/) for tutorials, API references, and best practices.
+- Join the community on the [Vaadin Forum](https://vaadin.com/forum/) to ask questions and share feedback.
+- Report issues or propose ideas for this VS Code plugin in [vaadin/vscode-plugin on GitHub](https://github.com/vaadin/vscode-plugin/issues).
