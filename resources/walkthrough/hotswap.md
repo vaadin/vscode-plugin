@@ -1,0 +1,3 @@
+- Run [Vaadin: Setup Hotswap Agent](command:vaadin.setupHotswap) to download the JetBrains Runtime, install Hotswap Agent, and update your build files.
+- After setup, start your session with [Vaadin: Debug using Hotswap Agent](command:vaadin.debugUsingHotswap) to reload UI changes without restarting the server.
+- Keep the debug session running while you develop to get fast feedback on code edits.

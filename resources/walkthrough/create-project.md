@@ -1,0 +1,3 @@
+- Run the [Vaadin: Generate new Vaadin project](command:vaadin.newProject) command from the Command Palette to scaffold your app.
+- Pick the workflow, frameworks, and Vaadin version that match your stack, then choose a folder for the project.
+- Open the created project in VS Code and start coding with the generated views and configuration.
