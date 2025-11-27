@@ -18,6 +18,7 @@ import { join, parse, resolve } from 'path';
 import JetbrainsRuntimeUtil from './jetbrainsUtil';
 import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
 import { trackDebugWithHotswap } from './ampliUtil';
+import { getJavaDebugConfigurationType } from './javaUtil';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
 const JAVA_AUTOBUILD = 'autobuild.enabled';
@@ -92,9 +93,11 @@ export async function debugUsingHotswap(context: ExtensionContext, autoSetup: bo
 
   const workspaceFolder = workspace.workspaceFolders[0];
 
+  const debugConfigurationType = getJavaDebugConfigurationType();
   const launchConfiguration = workspace.getConfiguration('launch');
   const configurations = launchConfiguration.get<any[]>('configurations');
-  if (!configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME)) {
+  const configEntry = configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME);
+  if (!configEntry) {
     // configuration does not exist
 
     if (autoSetup) {
@@ -112,6 +115,10 @@ export async function debugUsingHotswap(context: ExtensionContext, autoSetup: bo
         });
       return;
     }
+  } else if (configEntry.type !== debugConfigurationType) {
+    // Keep launch type in sync with the active Java extension.
+    configEntry.type = debugConfigurationType;
+    await launchConfiguration.update('configurations', configurations);
   }
 
   try {
@@ -264,6 +271,7 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
   const workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
   const vscodeFolder = join(workspaceFolder, '.vscode');
   const launchJsonPath = join(vscodeFolder, 'launch.json');
+  const debugConfigurationType = getJavaDebugConfigurationType();
 
   try {
     accessSync(launchJsonPath);
@@ -280,11 +288,13 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
 
   let configEntry = configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME);
   if (configEntry) {
+    // Align existing configuration with the Java extension currently available.
+    configEntry.type = debugConfigurationType;
     configEntry.javaExec = getJavaExecutable(javaHome);
     configEntry.mainClass = mainClass;
   } else {
     configEntry = {
-      type: 'java',
+      type: debugConfigurationType,
       name: LAUNCH_CONFIGURATION_NAME,
       request: 'launch',
       javaExec: getJavaExecutable(javaHome),
