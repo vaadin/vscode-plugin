@@ -1,6 +1,15 @@
 'use strict';
 
-import { commands, debug, ExtensionContext, QuickPickItem, window, workspace, WorkspaceConfiguration } from 'vscode';
+import {
+  commands,
+  debug,
+  ExtensionContext,
+  QuickPickItem,
+  window,
+  workspace,
+  WorkspaceConfiguration,
+  ConfigurationTarget,
+} from 'vscode';
 import { findRuntimes, getRuntime, IJavaRuntime } from 'jdk-utils';
 import { accessSync, copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 
@@ -11,6 +20,7 @@ import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
 import { trackDebugWithHotswap } from './ampliUtil';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
+const JAVA_AUTOBUILD = 'autobuild.enabled';
 const HOTSWAPAGENT_JAR = 'hotswap-agent.jar';
 const LAUNCH_CONFIGURATION_NAME = 'Debug using Hotswap Agent';
 
@@ -44,7 +54,7 @@ export async function setupHotswap(context: ExtensionContext, quiet: boolean = f
     return false;
   }
 
-  getJavaConfiguration().update(JAVA_DEBUG_HOTCODE_REPLACE, 'auto');
+  await ensureHotswapFriendlySettings();
 
   if (!(await installHotswapJar(context, javaHome))) {
     showCancellationWarning();
@@ -77,6 +87,8 @@ export async function debugUsingHotswap(context: ExtensionContext, autoSetup: bo
   }
 
   trackDebugWithHotswap();
+
+  await ensureHotswapFriendlySettings();
 
   const workspaceFolder = workspace.workspaceFolders[0];
 
@@ -289,6 +301,21 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
 
 function getJavaConfiguration(): WorkspaceConfiguration {
   return workspace.getConfiguration('java');
+}
+
+async function ensureHotswapFriendlySettings(): Promise<void> {
+  const configuration = getJavaConfiguration();
+  const updates: Array<Thenable<void>> = [];
+
+  if (configuration.get(JAVA_DEBUG_HOTCODE_REPLACE) !== 'auto') {
+    updates.push(configuration.update(JAVA_DEBUG_HOTCODE_REPLACE, 'auto', ConfigurationTarget.Workspace));
+  }
+
+  if (configuration.get<boolean>(JAVA_AUTOBUILD) === false) {
+    updates.push(configuration.update(JAVA_AUTOBUILD, true, ConfigurationTarget.Workspace));
+  }
+
+  await Promise.all(updates);
 }
 
 function showCancellationWarning() {
