@@ -36,6 +36,14 @@ type ShowInIdeCommandData = {
   column: number;
 };
 
+type BinaryHistory = {
+  undoStack: Buffer[];
+  redoStack: Buffer[];
+};
+
+// Track previous binary content so base64 writes can be undone without deleting files.
+const base64History: Map<string, BinaryHistory> = new Map();
+
 export async function writeFileHandler(data: WriteCommandData) {
   if (isFileInsideProject(data.file)) {
     const workspaceEdit = new vscode.WorkspaceEdit();
@@ -85,8 +93,52 @@ export async function writeFileHandler(data: WriteCommandData) {
 
 export async function writeBase64FileHandler(data: WriteCommandData) {
   if (isFileInsideProject(data.file)) {
-    let buff = Buffer.from(data.content, 'base64');
-    fs.writeFileSync(data.file, buff);
+    const uri = Uri.file(data.file);
+    const newContent = Buffer.from(data.content, 'base64');
+    const fileExists = fs.existsSync(data.file);
+    if (fileExists) {
+      const currentContent = fs.readFileSync(data.file);
+      if (currentContent.equals(newContent)) {
+        console.log('File ' + uri + ' unchanged, not saving');
+        return;
+      }
+      const history = base64History.get(data.file) ?? { undoStack: [], redoStack: [] };
+      history.undoStack.push(currentContent);
+      history.redoStack = [];
+      base64History.set(data.file, history);
+    }
+    const metadata = {
+      label: data.undoLabel,
+      needsConfirmation: false,
+    } as vscode.WorkspaceEditEntryMetadata;
+
+    const workspaceEdit = new vscode.WorkspaceEdit();
+
+    // Use workspace edit to keep the binary write on VS Code's undo stack.
+    workspaceEdit.createFile(uri, { contents: newContent, overwrite: true }, metadata);
+    const applied = await vscode.workspace.applyEdit(workspaceEdit);
+    if (!applied) {
+      console.warn('Could not apply workspace edit for ' + uri);
+      return;
+    }
+
+    try {
+      // Save via VS Code to keep undo stack and UndoManager counters in sync.
+      const doc = await vscode.workspace.openTextDocument(uri);
+      undoManager.lockDocument(doc);
+      try {
+        const result = await doc.save();
+        if (result) {
+          undoManager.pluginFileWritten(doc);
+        }
+      } finally {
+        undoManager.unlockDocument(doc);
+      }
+    } catch (error) {
+      console.warn('Cannot open ' + uri + ' for undo tracking: ' + error);
+    }
+  } else {
+    console.warn('File ' + data.file + ' is not a part of a project');
   }
 }
 
@@ -99,6 +151,36 @@ export async function undoRedoHandler(data: UndoRedoCommandData, operation: 'und
       const uri = Uri.file(file);
       const document = await vscode.workspace.openTextDocument(uri);
       if (!undoManager.canUndoRedo(document, operation)) {
+        continue;
+      }
+      // For base64 writes rely on stored snapshots instead of VS Code text undo stack.
+      const history = base64History.get(file);
+      const manualStack = history ? (operation === 'undo' ? history.undoStack : history.redoStack) : undefined;
+      if (manualStack && manualStack.length > 0) {
+        const targetContent = manualStack.pop()!;
+        const oppositeStack = operation === 'undo' ? history!.redoStack : history!.undoStack;
+        const currentContent = fs.existsSync(file) ? fs.readFileSync(file) : Buffer.alloc(0);
+        oppositeStack.push(currentContent);
+
+        const binaryEdit = new vscode.WorkspaceEdit();
+        binaryEdit.createFile(uri, { contents: targetContent, overwrite: true });
+        const applied = await vscode.workspace.applyEdit(binaryEdit);
+        if (!applied) {
+          console.warn('Could not apply binary ' + operation + ' for ' + uri);
+          continue;
+        }
+
+        const docToSave = await vscode.workspace.openTextDocument(uri);
+        undoManager.lockDocument(docToSave);
+        try {
+          const saved = await docToSave.save();
+          if (saved) {
+            undoManager.pluginUndoRedoPerformed(docToSave, operation);
+          }
+        } finally {
+          undoManager.unlockDocument(docToSave);
+        }
+        await vscode.window.showTextDocument(document, { preview: false });
         continue;
       }
       // editor must be opened to have undo/redo context
