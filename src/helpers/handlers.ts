@@ -42,20 +42,21 @@ export async function writeFileHandler(data: WriteCommandData) {
     const openDocument = vscode.workspace.textDocuments.find((doc) => doc.uri.fsPath === data.file);
 
     if (openDocument?.isDirty) {
+      const saveAndApply = { title: 'Save and apply' };
+      const applyWithoutSaving = { title: 'Apply without saving' };
       const choice = await vscode.window.showWarningMessage(
         `The file ${uri.fsPath} has unsaved changes. Save them before applying Vaadin Copilot updates?`,
         { modal: true },
-        'Save and apply',
-        'Apply without saving',
-        'Cancel',
+        saveAndApply,
+        applyWithoutSaving,
       );
 
-      if (!choice || choice === 'Cancel') {
+      if (!choice) {
         console.log('Aborting update of ' + uri + ' due to unsaved changes');
         return;
       }
 
-      if (choice === 'Save and apply') {
+      if (choice === saveAndApply) {
         const saved = await openDocument.save();
         if (!saved) {
           vscode.window.showErrorMessage('Unable to save ' + uri.fsPath + '. Changes were not applied.');
