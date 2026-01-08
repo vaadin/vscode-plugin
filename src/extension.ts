@@ -6,6 +6,7 @@ import { undoManager } from './helpers/undoManager';
 import { deleteProperties } from './helpers/properties';
 import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 import { DebugCodeLensProvider } from './debug-using-hotswapagent';
+import { StyleSheetLinkProvider } from './stylesheet-link-provider';
 import { getJavaExtensionId, JAVA_DEBUG_CONFIGURATION, JAVA_LANGID, ORACLE_JAVA_EXTENSION_ID } from './helpers/javaUtil';
 import { trackPluginInitialized } from './helpers/ampliUtil';
 
@@ -47,6 +48,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const lensProvider = vscode.languages.registerCodeLensProvider(JAVA_LANGID, new DebugCodeLensProvider());
     context.subscriptions.push(lensProvider);
   }
+
+  // Register @StyleSheet annotation definition provider
+  const styleSheetDefinitionProvider = vscode.languages.registerDefinitionProvider(
+    { language: JAVA_LANGID, scheme: 'file' },
+    new StyleSheetLinkProvider(),
+  );
+  context.subscriptions.push(styleSheetDefinitionProvider);
 
   if (isVaadinProject()) {
     startServer();
