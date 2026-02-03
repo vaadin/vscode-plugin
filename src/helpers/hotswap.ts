@@ -232,7 +232,7 @@ function getImplementationVersion(homedir: string): string | undefined {
  * @param javaHome java home
  * @returns true on success
  */
-async function installHotswapJar(context: ExtensionContext, javaHome: string): Promise<boolean> {
+export async function installHotswapJar(context: ExtensionContext, javaHome: string): Promise<boolean> {
   const hotswapDir = join(javaHome, 'lib', 'hotswap');
   const jarPath = join(hotswapDir, HOTSWAPAGENT_JAR);
 
@@ -247,6 +247,18 @@ async function installHotswapJar(context: ExtensionContext, javaHome: string): P
   }
 
   const hotswapAgentJar = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
+  try {
+    const existingJar = readFileSync(jarPath);
+    const bundledJar = readFileSync(hotswapAgentJar);
+    if (!existingJar.equals(bundledJar)) {
+      // Notify when the bundled JAR replaces a different existing version.
+      window.showInformationMessage('Existing hotswap-agent.jar differs from the bundled version and will be replaced.');
+    }
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      console.error('Failed to compare hotswap-agent.jar contents.', err);
+    }
+  }
   try {
     copyFileSync(hotswapAgentJar, jarPath);
   } catch (err: any) {
