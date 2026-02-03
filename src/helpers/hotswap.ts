@@ -81,6 +81,42 @@ export async function setupHotswap(context: ExtensionContext, quiet: boolean = f
   return true;
 }
 
+export async function checkBundledHotswapAgentVersion(context: ExtensionContext): Promise<void> {
+  try {
+    const bundledJarPath = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
+    const bundledVersion = getJarImplementationVersion(bundledJarPath);
+    if (!bundledVersion) {
+      return;
+    }
+
+    const runtimes = await findJetBrainsRuntimes();
+    const installedVersions = runtimes
+      .map((runtime) => (runtime.homedir ? getImplementationVersion(runtime.homedir) : undefined))
+      .filter((version): version is string => Boolean(version));
+    if (installedVersions.length === 0) {
+      return;
+    }
+
+    // Compare against the newest installed version to avoid noisy prompts with multiple runtimes.
+    const latestInstalled = installedVersions.reduce((best, candidate) =>
+      compareHotswapAgentVersions(candidate, best) > 0 ? candidate : best,
+    );
+
+    if (compareHotswapAgentVersions(bundledVersion, latestInstalled) <= 0) {
+      return;
+    }
+
+    const message = `A newer Hotswap Agent jar (${bundledVersion}) is available.`;
+    window.showInformationMessage(message, 'Update Hotswap Agent').then((action) => {
+      if (action) {
+        commands.executeCommand('vaadin.setupHotswap');
+      }
+    });
+  } catch (error) {
+    console.error('Failed to check bundled hotswap-agent.jar version', error);
+  }
+}
+
 export async function debugUsingHotswap(context: ExtensionContext, autoSetup: boolean = false) {
   if (!workspace.workspaceFolders) {
     window.showErrorMessage('No workspace is open.');
@@ -208,6 +244,14 @@ async function findDotVaadinRuntimes(): Promise<IJavaRuntime[]> {
 function getImplementationVersion(homedir: string): string | undefined {
   try {
     const jarPath = resolve(homedir, 'lib', 'hotswap', HOTSWAPAGENT_JAR);
+    return getJarImplementationVersion(jarPath);
+  } catch {
+    return undefined;
+  }
+}
+
+function getJarImplementationVersion(jarPath: string): string | undefined {
+  try {
     accessSync(jarPath);
 
     const zip = new AdmZip(jarPath);
@@ -224,6 +268,46 @@ function getImplementationVersion(homedir: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+type HotswapAgentVersion = {
+  numericParts: number[];
+  isSnapshot: boolean;
+};
+
+export function compareHotswapAgentVersions(left: string, right: string): number {
+  // Compare numeric segments first, then prefer non-snapshot builds when versions match.
+  const parsedLeft = parseHotswapAgentVersion(left);
+  const parsedRight = parseHotswapAgentVersion(right);
+  const maxLength = Math.max(parsedLeft.numericParts.length, parsedRight.numericParts.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const leftPart = parsedLeft.numericParts[i] ?? 0;
+    const rightPart = parsedRight.numericParts[i] ?? 0;
+    if (leftPart !== rightPart) {
+      return leftPart > rightPart ? 1 : -1;
+    }
+  }
+
+  if (parsedLeft.isSnapshot === parsedRight.isSnapshot) {
+    return 0;
+  }
+
+  return parsedLeft.isSnapshot ? -1 : 1;
+}
+
+function parseHotswapAgentVersion(version: string): HotswapAgentVersion {
+  const trimmed = version.trim();
+  const [numericPart, suffix] = trimmed.split('-', 2);
+  const numericParts = numericPart
+    .split('.')
+    .map((part) => Number(part))
+    .filter((part) => !Number.isNaN(part));
+
+  return {
+    numericParts,
+    isSnapshot: (suffix ?? '').toLowerCase().includes('snapshot'),
+  };
 }
 
 /**
