@@ -4,7 +4,7 @@ import { statusBarItem, startServer } from './helpers/server';
 import { newProjectUserInput } from './helpers/userInput';
 import { undoManager } from './helpers/undoManager';
 import { deleteProperties } from './helpers/properties';
-import { checkBundledHotswapAgentVersion, debugUsingHotswap, setupHotswap } from './helpers/hotswap';
+import { debugUsingHotswap, setupHotswap } from './helpers/hotswap';
 import { DebugCodeLensProvider } from './debug-using-hotswapagent';
 import { StyleSheetLinkProvider } from './stylesheet-link-provider';
 import { getJavaExtensionId, JAVA_DEBUG_CONFIGURATION, JAVA_LANGID, ORACLE_JAVA_EXTENSION_ID } from './helpers/javaUtil';
@@ -61,8 +61,6 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   trackPluginInitialized();
-  // Best-effort check to keep users informed about bundled hotswap updates.
-  void checkBundledHotswapAgentVersion(context);
 
   vscode.workspace.onDidSaveTextDocument((doc) => undoManager.documentSaveListener(doc));
 }
