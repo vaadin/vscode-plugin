@@ -30,6 +30,9 @@ class JavaRuntimeQuickPickItem implements QuickPickItem {
   constructor(item: IJavaRuntime | undefined) {
     this.item = item;
     this.label = item?.version?.java_version || 'unknown';
+    if (item?.homedir) {
+      this.description = item?.homedir;
+    }
     if (!item) {
       this.label = 'Download from https://github.com/JetBrains/JetBrainsRuntime';
     }
@@ -386,7 +389,7 @@ export async function checkBundledHotswapAgentVersion(context: ExtensionContext)
   const installedVersion = getJarVersion(installedJarPath);
 
   // install hotswap-agent.jar if not present
-  if (!installedVersion || bundledVersion != installedVersion) {
+  if (!installedVersion || bundledVersion !== installedVersion) {
     setupHotswap(context, true);
   }
 
