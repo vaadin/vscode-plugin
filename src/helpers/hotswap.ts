@@ -14,7 +14,7 @@ import { findRuntimes, getRuntime, IJavaRuntime } from 'jdk-utils';
 import { accessSync, copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 
 import AdmZip from 'adm-zip';
-import { join, parse, resolve } from 'path';
+import { join, parse } from 'path';
 import JetbrainsRuntimeUtil from './jetbrainsUtil';
 import { resolveVaadinHomeDirectory } from './projectFilesHelpers';
 import { trackDebugWithHotswap } from './ampliUtil';
@@ -22,6 +22,7 @@ import { getJavaDebugConfigurationType } from './javaUtil';
 
 const JAVA_DEBUG_HOTCODE_REPLACE = 'debug.settings.hotCodeReplace';
 const JAVA_AUTOBUILD = 'autobuild.enabled';
+const VSCODE_PLUGIN_DIR = "vscode-plugin";
 const HOTSWAPAGENT_JAR = 'hotswap-agent.jar';
 const LAUNCH_CONFIGURATION_NAME = 'Debug using Hotswap Agent';
 
@@ -29,14 +30,6 @@ class JavaRuntimeQuickPickItem implements QuickPickItem {
   constructor(item: IJavaRuntime | undefined) {
     this.item = item;
     this.label = item?.version?.java_version || 'unknown';
-    if (item?.homedir) {
-      this.description = item?.homedir;
-      const ver = getImplementationVersion(item.homedir);
-      if (ver) {
-        this.detail = 'hotswap-agent.jar detected: ' + ver;
-      }
-    }
-
     if (!item) {
       this.label = 'Download from https://github.com/JetBrains/JetBrainsRuntime';
     }
@@ -57,7 +50,7 @@ export async function setupHotswap(context: ExtensionContext, quiet: boolean = f
 
   await ensureHotswapFriendlySettings();
 
-  if (!(await installHotswapJar(context, javaHome))) {
+  if (!(await installHotswapJar(context))) {
     showCancellationWarning();
     return false;
   }
@@ -68,11 +61,11 @@ export async function setupHotswap(context: ExtensionContext, quiet: boolean = f
   }
 
   if (quiet) {
-    window.showInformationMessage('hotswap-agent.jar setup finished');
+    window.showInformationMessage('Hotswap configuration finished');
     return true;
   }
 
-  window.showInformationMessage('hotswap-agent.jar installed', LAUNCH_CONFIGURATION_NAME).then((action) => {
+  window.showInformationMessage('Hotswap configuration finished', LAUNCH_CONFIGURATION_NAME).then((action) => {
     if (action) {
       commands.executeCommand('vaadin.debugUsingHotswap');
     }
@@ -201,13 +194,12 @@ async function findDotVaadinRuntimes(): Promise<IJavaRuntime[]> {
 }
 
 /**
- * Looks for java.home/lib/hotswap/hotswap-agent.jar version
- * @param homedir Java home directory
+ * Looks for jar version
+ * @param jarPath path to jar
  * @returns version if present
  */
-function getImplementationVersion(homedir: string): string | undefined {
+function getJarVersion(jarPath: string): string | undefined {
   try {
-    const jarPath = resolve(homedir, 'lib', 'hotswap', HOTSWAPAGENT_JAR);
     accessSync(jarPath);
 
     const zip = new AdmZip(jarPath);
@@ -232,8 +224,9 @@ function getImplementationVersion(homedir: string): string | undefined {
  * @param javaHome java home
  * @returns true on success
  */
-async function installHotswapJar(context: ExtensionContext, javaHome: string): Promise<boolean> {
-  const hotswapDir = join(javaHome, 'lib', 'hotswap');
+async function installHotswapJar(context: ExtensionContext): Promise<boolean> {
+  
+  const hotswapDir = join(resolveVaadinHomeDirectory(), VSCODE_PLUGIN_DIR);
   const jarPath = join(hotswapDir, HOTSWAPAGENT_JAR);
 
   try {
@@ -287,11 +280,29 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
   const configurations = launchConfiguration.get<any[]>('configurations');
 
   let configEntry = configurations?.find((c) => c.name === LAUNCH_CONFIGURATION_NAME);
+
+  const paramsList: string[] = [];
+  const addOpens = "--add-opens";
+  paramsList.push(addOpens, "java.base/sun.nio.ch=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.base/java.lang=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.base/java.lang.reflect=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.base/java.io=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.base/sun.security.action=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.desktop/java.beans=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.desktop/com.sun.beans=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.desktop/com.sun.beans.introspect=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.desktop/com.sun.beans.util=ALL-UNNAMED");
+  paramsList.push(addOpens, "java.base/jdk.internal.loader=ALL-UNNAMED");
+  paramsList.push("-XX:+AllowEnhancedClassRedefinition");
+  paramsList.push("-XX:+ClassUnloading");
+  paramsList.push(`-javaagent:${join(resolveVaadinHomeDirectory(), VSCODE_PLUGIN_DIR, HOTSWAPAGENT_JAR)}`);
+
   if (configEntry) {
     // Align existing configuration with the Java extension currently available.
     configEntry.type = debugConfigurationType;
     configEntry.javaExec = getJavaExecutable(javaHome);
     configEntry.mainClass = mainClass;
+    configEntry.vmArgs = paramsList.join(' ');
   } else {
     configEntry = {
       type: debugConfigurationType,
@@ -299,7 +310,7 @@ async function updateLaunchConfiguration(javaHome: string): Promise<boolean> {
       request: 'launch',
       javaExec: getJavaExecutable(javaHome),
       mainClass: mainClass,
-      vmArgs: '-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar',
+      vmArgs: paramsList.join(' ')
     };
     configurations?.unshift(configEntry);
   }
@@ -365,4 +376,18 @@ async function findSpringBootApplicationMainClass(): Promise<string | undefined>
       console.error(`Error reading file: ${file.fsPath}`, error);
     }
   }
+}
+
+export async function checkBundledHotswapAgentVersion(context: ExtensionContext): Promise<void> {
+  const bundledJarPath = join(context.extensionPath, 'resources', HOTSWAPAGENT_JAR);
+  const bundledVersion = getJarVersion(bundledJarPath);
+
+  const installedJarPath = join(resolveVaadinHomeDirectory(), VSCODE_PLUGIN_DIR, HOTSWAPAGENT_JAR);
+  const installedVersion = getJarVersion(installedJarPath);
+
+  // install hotswap-agent.jar if not present
+  if (!installedVersion || bundledVersion != installedVersion) {
+    setupHotswap(context, true);
+  }
+
 }
