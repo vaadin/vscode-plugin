@@ -64,6 +64,8 @@ export async function activate(context: vscode.ExtensionContext) {
   // Best-effort check to keep users informed about bundled hotswap updates.
   void checkBundledHotswapAgentVersion(context);
 
+  checkBundledHotswapAgentVersion(context);
+
   vscode.workspace.onDidSaveTextDocument((doc) => undoManager.documentSaveListener(doc));
 }
 
